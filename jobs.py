@@ -13,6 +13,13 @@ import sys
 sys.path.append("..")
 from input.models.deep_sort_cnn.freeze_model import create_graph
 
+def log_args(args):
+    print('-----------------------------')
+    print('Starting job with parameters:')
+    for key, value in args.__dict__.items():
+        print(f'--{key}={value}')
+    print('-----------------------------')
+
 def siamese_job(source_path, model_path, **kwargs):
 
     graph_creator = kwargs.pop('graph_creator', None)
@@ -21,18 +28,6 @@ def siamese_job(source_path, model_path, **kwargs):
     num_per_class = kwargs.pop('num_per_class', 5)
     margin = kwargs.pop('margin', 0.2)
     lr = kwargs.pop('lr', 1e-3)
-
-    print(f"""
-    Started with parameters:
-    --source_path={source_path}
-    --model_path={model_path}
-    --graph_creator={True if graph_creator != None else False}
-    --batch_size={batch_size}
-    --num_iter={num_iter}
-    --num_per_class={num_per_class}
-    --margin={margin}
-    --lr={lr}
-    """)
     
     tf.reset_default_graph()
 
@@ -128,6 +123,7 @@ def parse_args():
 
 def main():
     args = parse_args()
+    log_args(args)
 
     if args.job_name == 'siamese':
         siamese_job(
