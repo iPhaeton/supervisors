@@ -233,7 +233,6 @@ def train_siamese_model(
             inputs: samples,
             labels: batch_lables,
         })
-        print('Training loss', batch_loss)
 
         val_loss = validate_siamese_model(
             session=session, 
@@ -246,4 +245,6 @@ def train_siamese_model(
             batch_loader=batch_loader,
             num_per_class=num_per_class,
         )
-        print('Validation loss', val_loss)
+
+        print(f'{{"metric": "Train loss", "value"{batch_loss}}}')
+        print(f'{{"metric": "Val loss", "value"{val_loss}}}')
