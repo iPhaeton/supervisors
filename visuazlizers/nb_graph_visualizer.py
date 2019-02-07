@@ -48,3 +48,9 @@ def show_graph(graph_def, max_const_size=32):
         <iframe seamless style="width:800px;height:620px;border:0" srcdoc="{}"></iframe>
     """.format(code.replace('"', '&quot;'))
     display(HTML(iframe))
+
+"""
+Usage:
+tmp_def = rename_nodes(graph_def, lambda s:"/".join(s.split('_',1)))
+show_graph(tmp_def)
+"""

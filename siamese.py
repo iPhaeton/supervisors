@@ -114,3 +114,69 @@ def compute_loss(model, metric, masks, margin):
     loss = tf.reduce_sum(loss) / (num_triplets + 1e-16)
 
     return loss
+
+def train_siamese_model(
+    session,
+    model, 
+    source_path, 
+    dirs, 
+    train_labels, 
+    metric, 
+    optimizer,
+    batch_loader,
+    margin=0.2, 
+    num_per_class=5, 
+    num_iter=1000, 
+):
+    """
+    Trains a siamese model
+    
+    Parameters:
+    -----------
+    - session: Tensorflow Session instance.
+    - model: tuple
+        Sould contain two tensors - one for moel input, another for model output.
+    - source_path: string
+        Path to model data.
+    - dirs: [[string], [string]]
+        Lists of training and validation directories.
+    - train_labels: [int]
+        Labels for classes used during training.
+    - metric: Function
+        Should take output tensor as a parameter and compute distance matrix between outputs.
+    - optimizer: Tensorflow optimizer instance
+    - batch_loader: Function
+        Should take source_path, train_dirs, train_labels, num_per_class as parameters
+        and return an iterator [samples, batch_lables]
+    - margin: float
+        Desired margin between negative and positive samples.
+    - num_per_class: int
+        Number of samples randomly chosen from each class
+    - num_iter: int
+        Number of iterations
+    """
+    
+    train_dirs, val_dirs = dirs
+    
+    inputs, outputs = model
+    labels = tf.placeholder(name='labels', shape=(len(train_labels) * num_per_class), dtype=tf.int8)
+    anchor_positive_mask = get_anchor_positive_mask(labels)
+    negetive_mask = get_negative_mask(labels)
+    
+    loss = compute_loss(
+        model=(inputs, outputs), 
+        metric=metric, 
+        masks=(anchor_positive_mask, negetive_mask), 
+        margin=margin,
+    )
+    
+    train_step = optimizer.minimize(loss)
+    session.run(tf.global_variables_initializer())
+    
+    for i in range(num_iter):
+        samples, batch_lables = batch_loader(source_path, train_dirs, train_labels, num_per_class)
+        batch_outputs, batch_loss, _ = session.run([outputs, loss, train_step], {
+            inputs: samples,
+            labels: batch_lables,
+        })
+        print(batch_loss)
