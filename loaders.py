@@ -4,8 +4,10 @@ import numpy as np
 from tqdm import tqdm
 import os
 from pyramda import curry
+from decorators import partially_applied
 
-def load_batch_of_images(path, dirs, labels, num_per_class, image_shape):
+@partially_applied
+def load_batch_of_images(path, dirs, labels, num_per_class, **kwargs):
     """
     Loads a random batch of images
     
@@ -20,6 +22,9 @@ def load_batch_of_images(path, dirs, labels, num_per_class, image_shape):
         Class labels. Should correspond to classes.
     - num_per_class: int
         Number of images randomly chosen from each class
+
+    Keyword arguments:
+    ------------------
     - image_shape: tuple (H,W,C)
         H - image height
         W - image width
@@ -36,6 +41,8 @@ def load_batch_of_images(path, dirs, labels, num_per_class, image_shape):
     - batch_labels: [int]
         Sample labels.
     """
+
+    image_shape = kwargs.pop('image_shape', None)
     
     samples = np.zeros((num_per_class * len(dirs), *image_shape))
     batch_labels = np.ones(num_per_class * len(dirs)).astype(int)
@@ -58,24 +65,24 @@ def load_batch_of_images(path, dirs, labels, num_per_class, image_shape):
     
     return samples, batch_labels
 
-def image_batch_loader(image_shape):
-    """
-    Image batch loader for train_siamese_model suprevisor
+# def image_batch_loader(image_shape):
+#     """
+#     Image batch loader for train_siamese_model suprevisor
 
-    Parameters:
-    -----------
-    - image_shape: tuple (H,W,C)
-        H - image height
-        W - image width
-        C - number of channels
+#     Parameters:
+#     -----------
+#     - image_shape: tuple (H,W,C)
+#         H - image height
+#         W - image width
+#         C - number of channels
 
-    Returns:
-    --------
-    - batch_loader: Function
-        Takes source_path, train_dirs, train_labels, num_per_class as parameters
-        and return an iterator [samples, batch_lables]
-    """
-    return curry(load_batch_of_images)(image_shape=image_shape)
+#     Returns:
+#     --------
+#     - batch_loader: Function
+#         Takes source_path, train_dirs, train_labels, num_per_class as parameters
+#         and return an iterator [samples, batch_lables]
+#     """
+#     return curry(load_batch_of_images)(image_shape=image_shape)
 
 def load_model_pb(checkpoint_filename, input_name, output_name, **kwargs):
     """

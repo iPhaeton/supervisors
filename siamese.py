@@ -115,12 +115,61 @@ def compute_loss(model, metric, masks, margin):
 
     return loss
 
+def validate_siamese_model(
+    session,
+    model, 
+    source_path, 
+    val_dirs, 
+    val_labels,
+    metric,
+    margin,
+    batch_loader,
+    num_per_class,
+):
+    """
+    Validates a siamese model
+    
+    Parameters:
+    -----------
+    - session: Tensorflow Session instance.
+    - model: tuple
+        Sould contain three tensors (inputs, labels, loss).
+    - source_path: string
+        Path to model data.
+    - val_dirs: [string]
+        List of validation directories.
+    - val_labels: [int]
+        List of validation class labels.
+    - metric: Function
+        Should take output tensor as a parameter and compute distance matrix between outputs.
+    - batch_loader: Function
+        Should take source_path, train_dirs, train_labels, num_per_class as parameters
+        and return an iterator [samples, batch_lables]
+    - num_per_class: int
+        Number of samples randomly chosen from each class
+    
+    Returns:
+    --------
+    - batch_loss: float
+        Value of the loss function on the validation batch.
+    """
+
+    samples, batch_lables = batch_loader(source_path, val_dirs, val_labels, num_per_class)
+    inputs, labels, loss = model
+    
+    batch_loss= session.run(loss, {
+        inputs: samples,
+        labels: batch_lables,
+    })
+
+    return batch_loss
+
 def train_siamese_model(
     session,
     model, 
     source_path, 
     dirs, 
-    train_labels, 
+    class_labels, 
     metric, 
     optimizer,
     batch_loader,
@@ -135,13 +184,13 @@ def train_siamese_model(
     -----------
     - session: Tensorflow Session instance.
     - model: tuple
-        Sould contain two tensors - one for moel input, another for model output.
+        Sould contain two tensors (model input, model output).
     - source_path: string
         Path to model data.
     - dirs: [[string], [string]]
         Lists of training and validation directories.
-    - train_labels: [int]
-        Labels for classes used during training.
+    - class_labels: [[int], [int]]
+        Lists of training and validation class labels.
     - metric: Function
         Should take output tensor as a parameter and compute distance matrix between outputs.
     - optimizer: Tensorflow optimizer instance
@@ -154,12 +203,17 @@ def train_siamese_model(
         Number of samples randomly chosen from each class
     - num_iter: int
         Number of iterations
+
+    Returns:
+    --------
+    None
     """
     
     train_dirs, val_dirs = dirs
+    train_labels, val_labels = class_labels
     
     inputs, outputs = model
-    labels = tf.placeholder(name='labels', shape=(len(train_labels) * num_per_class), dtype=tf.int8)
+    labels = tf.placeholder(name='labels', dtype=tf.int8)
     anchor_positive_mask = get_anchor_positive_mask(labels)
     negetive_mask = get_negative_mask(labels)
     
@@ -175,8 +229,21 @@ def train_siamese_model(
     
     for i in range(num_iter):
         samples, batch_lables = batch_loader(source_path, train_dirs, train_labels, num_per_class)
-        batch_outputs, batch_loss, _ = session.run([outputs, loss, train_step], {
+        batch_loss, _ = session.run([loss, train_step], {
             inputs: samples,
             labels: batch_lables,
         })
-        print(batch_loss)
+        print('Training loss', batch_loss)
+
+        val_loss = validate_siamese_model(
+            session=session, 
+            model=[inputs, labels, loss], 
+            source_path=source_path, 
+            val_dirs=val_dirs,
+            val_labels=val_labels,
+            metric=metric,
+            margin=margin,
+            batch_loader=batch_loader,
+            num_per_class=num_per_class,
+        )
+        print('Validation loss', val_loss)
