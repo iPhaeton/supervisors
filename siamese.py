@@ -125,6 +125,7 @@ def validate_siamese_model(
     margin,
     batch_loader,
     num_per_class,
+    batch_size,
 ):
     """
     Validates a siamese model
@@ -147,6 +148,8 @@ def validate_siamese_model(
         and return an iterator [samples, batch_lables]
     - num_per_class: int
         Number of samples randomly chosen from each class
+    - batch_size: int
+        Number of classes to use in a single batch. Total number of samples will be batch_size * num_per_class
     
     Returns:
     --------
@@ -154,7 +157,8 @@ def validate_siamese_model(
         Value of the loss function on the validation batch.
     """
 
-    samples, batch_lables = batch_loader(source_path, val_dirs, val_labels, num_per_class)
+
+    samples, batch_lables = batch_loader(source_path, val_dirs, val_labels, num_per_class, batch_size if (batch_size != None) and (batch_size < len(val_dirs)) else None)
     inputs, labels, loss = model
     
     batch_loss= session.run(loss, {
@@ -175,7 +179,8 @@ def train_siamese_model(
     batch_loader,
     margin=0.2, 
     num_per_class=5, 
-    num_iter=1000, 
+    num_iter=1000,
+    batch_size=None,
 ):
     """
     Trains a siamese model
@@ -203,6 +208,8 @@ def train_siamese_model(
         Number of samples randomly chosen from each class
     - num_iter: int
         Number of iterations
+    - batch_size: int
+        Number of classes to use in a single batch. Total number of samples will be batch_size * num_per_class
 
     Returns:
     --------
@@ -228,7 +235,7 @@ def train_siamese_model(
     session.run(tf.global_variables_initializer())
     
     for i in range(num_iter):
-        samples, batch_lables = batch_loader(source_path, train_dirs, train_labels, num_per_class)
+        samples, batch_lables = batch_loader(source_path, train_dirs, train_labels, num_per_class, batch_size)
         batch_loss, _ = session.run([loss, train_step], {
             inputs: samples,
             labels: batch_lables,
@@ -244,6 +251,7 @@ def train_siamese_model(
             margin=margin,
             batch_loader=batch_loader,
             num_per_class=num_per_class,
+            batch_size=batch_size,
         )
 
         print(f'{{"metric": "Train loss", "value"{batch_loss}}}')

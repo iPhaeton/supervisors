@@ -16,7 +16,8 @@ from input.models.deep_sort_cnn.freeze_model import create_graph
 def siamese_job(source_path, model_path, **kwargs):
 
     graph_creator = kwargs.pop('graph_creator', None)
-
+    batch_size = kwargs.pop('batch_size', None)
+    
     tf.reset_default_graph()
 
     dirs = compose(
@@ -46,6 +47,7 @@ def siamese_job(source_path, model_path, **kwargs):
         optimizer=tf.train.AdamOptimizer(learning_rate=0.00001),
         batch_loader=load_batch_of_images(image_shape=(128, 64, 3)),
         num_iter=2,
+        batch_size=batch_size,
     )
 
 def parse_args():
@@ -71,13 +73,17 @@ def parse_args():
         "--use_graph_creator",
         default=False,
     )
+    parser.add_argument(
+        "--batch_size",
+        default=None,
+    )
     return parser.parse_args()
 
 def main():
     args = parse_args()
 
     if args.job_name == 'siamese':
-        siamese_job(args.source_path, args.model_path, graph_creator=create_graph if args.use_graph_creator else None)
+        siamese_job(args.source_path, args.model_path, graph_creator=create_graph if args.use_graph_creator else None, batch_size=batch_size)
 
 if __name__ == '__main__':
     main()
