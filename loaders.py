@@ -3,6 +3,7 @@ from PIL import Image
 import numpy as np
 from tqdm import tqdm
 import os
+from pyramda import curry
 
 def load_batch_of_images(path, dirs, labels, num_per_class, image_shape):
     """
@@ -56,6 +57,25 @@ def load_batch_of_images(path, dirs, labels, num_per_class, image_shape):
         batch_labels[i*num_per_class: i*num_per_class + num_per_class] = batch_labels[i*num_per_class: i*num_per_class + num_per_class] * labels[i]
     
     return samples, batch_labels
+
+def image_batch_loader(image_shape):
+    """
+    Image batch loader for train_siamese_model suprevisor
+
+    Parameters:
+    -----------
+    - image_shape: tuple (H,W,C)
+        H - image height
+        W - image width
+        C - number of channels
+
+    Returns:
+    --------
+    - batch_loader: Function
+        Takes source_path, train_dirs, train_labels, num_per_class as parameters
+        and return an iterator [samples, batch_lables]
+    """
+    return curry(load_batch_of_images)(image_shape=image_shape)
 
 def load_model_pb(checkpoint_filename, input_name, output_name, **kwargs):
     """

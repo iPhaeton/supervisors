@@ -84,9 +84,9 @@ def compute_loss(model, metric, masks, margin):
     Parameters:
     -----------
     - model: tuple
-        Model input tensor and model output tensor
-    - metric: function
-        Should take output tesor as a parameter and compute distance matrix
+        Model input tensor and model output tensor.
+    - metric: Function
+        Should take output tensor as a parameter and compute distance matrix between outputs.
     - masks: tuple
         Contains two matrices: 
             a square martix with ones for all positive samples, except anchors on main diagonal, 
