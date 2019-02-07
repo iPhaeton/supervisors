@@ -1,3 +1,4 @@
+import tensorflow as tf
 from PIL import Image
 import numpy as np
 from tqdm import tqdm
@@ -55,3 +56,52 @@ def load_batch_of_images(path, dirs, labels, num_per_class, image_shape):
         batch_labels[i*num_per_class: i*num_per_class + num_per_class] = batch_labels[i*num_per_class: i*num_per_class + num_per_class] * labels[i]
     
     return samples, batch_labels
+
+def load_model_pb(checkpoint_filename, input_name, output_name, **kwargs):
+    """
+    Load a model from saved .pb file and checkpoint
+    
+    Parameters:
+    -----------
+    - checkpoint_filename: string
+        Path to the checkpoint on disk.
+    - input_name: string
+        Name of the input variable in the graph.
+    - output_name: string
+        Name of the output variable in the graph.
+
+    Keyword arguments:
+    ------------------
+    - graph_creator: Function
+        Should create the model graph
+        
+    Returns:
+    --------
+    - inputs: Tensor (N, H, W, C)
+        Images
+        N - number of samples (None)
+        H - image height
+        W - image width
+        C - number of channels
+    - outputs: Tensor (N, E)
+        Image embeddings
+        N - number of samples (None)
+        E - embedding size
+    """
+    graph_creator = kwargs.pop('graph_creator', None)
+    
+    inputs, outputs = None, None
+    if graph_creator != None:
+        inputs, outputs = graph_creator()
+    
+    with tf.gfile.GFile(checkpoint_filename, "rb") as file_handle:
+        graph_def = tf.GraphDef()
+        graph_def.ParseFromString(file_handle.read())
+    
+    tf.import_graph_def(graph_def, name="net")
+    
+    if graph_creator == None:
+        inputs = tf.get_default_graph().get_tensor_by_name("net/%s:0" % input_name)
+        outputs = tf.get_default_graph().get_tensor_by_name("net/%s:0" % output_name)
+    
+    return inputs, outputs, graph_def
