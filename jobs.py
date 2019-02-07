@@ -4,7 +4,7 @@ from utils.curried_functions import tf_add, tf_cast, tf_multiply, filter_list
 from utils.common import classes_to_labels
 import os
 from sklearn.model_selection import train_test_split
-from loaders import load_batch_of_images, load_model_pb
+from loaders import load_batch_of_images, load_model_pb, cv2_loader
 from utils.metrics import cosine_distance
 from siamese import train_siamese_model
 import argparse
@@ -56,7 +56,7 @@ def siamese_job(source_path, model_path, **kwargs):
         class_labels=(train_labels, val_labels),
         metric=cosine_distance,
         optimizer=tf.train.AdamOptimizer(learning_rate=lr),
-        batch_loader=load_batch_of_images(image_shape=(128, 64, 3)),
+        batch_loader=load_batch_of_images(image_shape=(128, 64, 3), loader=cv2_loader),
         margin=margin,
         num_iter=num_iter,
         num_per_class=num_per_class,

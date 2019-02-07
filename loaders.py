@@ -4,6 +4,19 @@ import numpy as np
 import os
 from pyramda import curry
 from decorators import partially_applied
+import cv2
+
+#loads images in RGB format
+def pil_loader(path, image_shape):
+    img = Image.open(path)
+    img = img.resize((image_shape[1], image_shape[0]))
+    return np.array(img)
+
+#loads images in BGR format
+def cv2_loader(path, image_shape):
+    img = cv2.imread(path, cv2.IMREAD_COLOR)
+    img = cv2.resize(img, (image_shape[1], image_shape[0]))
+    return np.array(img)
 
 @partially_applied
 def load_batch_of_images(path, path_dirs, labels, num_per_class, batch_size=None, **kwargs):
@@ -30,6 +43,9 @@ def load_batch_of_images(path, path_dirs, labels, num_per_class, batch_size=None
         H - image height
         W - image width
         C - number of channels
+    - loader: Function
+        Should take path to image file and image_shape as parameters.
+        Should return numpy array
       
     Returns:
     --------
@@ -44,6 +60,7 @@ def load_batch_of_images(path, path_dirs, labels, num_per_class, batch_size=None
     """
 
     image_shape = kwargs.pop('image_shape', None)
+    loader = kwargs.pop('loader', cv2_loader)
 
     dirs = np.random.choice(path_dirs, batch_size) if batch_size != None else path_dirs
     
@@ -58,10 +75,7 @@ def load_batch_of_images(path, path_dirs, labels, num_per_class, batch_size=None
         batch = np.zeros((num_per_class, *image_shape))
 
         for j, filename in enumerate(filenames):
-            img = Image.open(os.path.join(dir_path, filename))
-            img = img.resize((image_shape[1], image_shape[0]))
-            img = np.array(img)
-            batch[j,:,:,:] = img
+            batch[j,:,:,:] = loader(os.path.join(dir_path, filename), image_shape)
         
         samples[i*num_per_class: i*num_per_class + num_per_class, :, :, :] = batch
         batch_labels[i*num_per_class: i*num_per_class + num_per_class] = batch_labels[i*num_per_class: i*num_per_class + num_per_class] * labels[i]
