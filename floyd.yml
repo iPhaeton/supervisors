@@ -1,0 +1,9 @@
+machine: cpu
+mode: job
+env: tensorflow-1.11
+input:
+  - destination: models
+    source: dashbouquet/datasets/models/2
+  - destination: mars
+    source: dashbouquet/datasets/mars/1
+command: python jobs.py --job_name=siamese --source_path=../input/mars/bbox_train/ --model_path=../input/models/deep_sort_cnn/mars-small128.pb --use_graph_creator=True
