@@ -179,7 +179,7 @@ def train_siamese_model(
     batch_loader,
     margin=0.2, 
     num_per_class=5, 
-    num_iter=1000,
+    num_iter=100,
     batch_size=None,
 ):
     """

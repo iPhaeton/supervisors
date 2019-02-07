@@ -17,6 +17,22 @@ def siamese_job(source_path, model_path, **kwargs):
 
     graph_creator = kwargs.pop('graph_creator', None)
     batch_size = kwargs.pop('batch_size', None)
+    num_iter = kwargs.pop('num_iter', 100)
+    num_per_class = kwargs.pop('num_per_class', 5)
+    margin = kwargs.pop('margin', 0.2)
+    lr = kwargs.pop('lr', 1e-3)
+
+    print(f"""
+    Started with parameters:
+    --source_path={source_path}
+    --model_path={model_path}
+    --graph_creator={True if graph_creator != None else False}
+    --batch_size={batch_size}
+    --num_iter={num_iter}
+    --num_per_class={num_per_class}
+    --margin={margin}
+    --lr={lr}
+    """)
     
     tf.reset_default_graph()
 
@@ -44,9 +60,11 @@ def siamese_job(source_path, model_path, **kwargs):
         dirs=(train_dirs, val_dirs),
         class_labels=(train_labels, val_labels),
         metric=cosine_distance,
-        optimizer=tf.train.AdamOptimizer(learning_rate=0.00001),
+        optimizer=tf.train.AdamOptimizer(learning_rate=lr),
         batch_loader=load_batch_of_images(image_shape=(128, 64, 3)),
-        num_iter=2,
+        margin=margin,
+        num_iter=num_iter,
+        num_per_class=num_per_class,
         batch_size=batch_size,
     )
 
@@ -57,25 +75,54 @@ def parse_args():
     parser.add_argument(
         "--job_name",
         required=True,
-        choices=['siamese']
+        choices=['siamese'],
+        type=str,
     )
     parser.add_argument(
         "--source_path",
         required=True,
-        help="Path to the data"
+        help="Path to the data",
+        type=str,
     )
     parser.add_argument(
         "--model_path",
         required=True,
-        help="Path to the model"
+        help="Path to the model",
+        type=str,
     )
     parser.add_argument(
         "--use_graph_creator",
         default=False,
+        type=bool,
     )
     parser.add_argument(
         "--batch_size",
         default=None,
+        type=int
+    )
+    parser.add_argument(
+        "--num_iter",
+        default=100,
+        help='Number of iterations',
+        type=int
+    )
+    parser.add_argument(
+        "--num_per_class",
+        default=5,
+        help="Number of samples per class in each batch",
+        type=int
+    )
+    parser.add_argument(
+        "--margin",
+        default=0.2,
+        help="Desired margin between positive and negarive distances",
+        type=float,
+    )
+    parser.add_argument(
+        "--lr",
+        default=1e-3,
+        help="Learning rate",
+        type=float,
     )
     return parser.parse_args()
 
@@ -83,7 +130,16 @@ def main():
     args = parse_args()
 
     if args.job_name == 'siamese':
-        siamese_job(args.source_path, args.model_path, graph_creator=create_graph if args.use_graph_creator else None, batch_size=batch_size)
+        siamese_job(
+            args.source_path, 
+            args.model_path, 
+            graph_creator=create_graph if args.use_graph_creator else None, 
+            batch_size=args.batch_size, 
+            num_iter=args.num_iter,
+            num_per_class=args.num_per_class,
+            margin=args.margin,
+            lr=args.lr,
+        )
 
 if __name__ == '__main__':
     main()
