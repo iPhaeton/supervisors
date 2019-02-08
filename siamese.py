@@ -4,6 +4,7 @@ import tensorflow as tf
 from pyramda import compose
 from utils.curried_functions import tf_cast, tf_add, tf_multiply
 import numpy as np
+from decorators import with_tensorboard
 
 def get_positive_mask(labels):
     """
@@ -212,6 +213,7 @@ def validate_siamese_model(
 
     return batch_loss
 
+@with_tensorboard
 def train_siamese_model(
     session,
     model, 
