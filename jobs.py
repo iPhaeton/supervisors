@@ -6,7 +6,7 @@ import os
 from sklearn.model_selection import train_test_split
 from loaders import load_batch_of_images, load_model_pb, cv2_loader
 from utils.metrics import cosine_distance
-from siamese import train_siamese_model
+from siamese import train_siamese_model, create_graph as create_siamese_graph
 import argparse
 
 import sys
@@ -46,16 +46,16 @@ def siamese_job(source_path, model_path, **kwargs):
         graph_creator=graph_creator,
     )
 
+    model = create_siamese_graph(base_model=[inputs, outputs], metric=cosine_distance, margin=margin, optimizer=tf.train.AdamOptimizer(learning_rate=lr),)
     session = tf.Session()
 
     train_siamese_model(
         session=session,
-        model=[inputs, outputs],
+        model=model,
         source_path=source_path,
         dirs=(train_dirs, val_dirs),
         class_labels=(train_labels, val_labels),
         metric=cosine_distance,
-        optimizer=tf.train.AdamOptimizer(learning_rate=lr),
         batch_loader=load_batch_of_images(image_shape=(128, 64, 3), loader=cv2_loader),
         margin=margin,
         num_iter=num_iter,

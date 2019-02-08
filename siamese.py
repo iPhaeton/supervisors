@@ -115,6 +115,50 @@ def compute_loss(model, metric, masks, margin):
 
     return loss
 
+def create_graph(base_model, metric, margin, optimizer):
+    """
+    Creates graph for a siamese model
+    
+    Parameters:
+    -----------
+    - base_model: tuple
+        Sould contain two tensors (base_model input, base_model output).
+    - metric: Function
+        Should take output tensor as a parameter and compute distance matrix between outputs.
+    - margin: float
+        Desired margin between negative and positive samples.
+    - optimizer: Tensorflow optimizer instance
+
+    Returns:
+    --------
+    - inputs: Tensor
+        Model inputs
+    - outputs: Tensor
+        Model outputs
+    - labels: Tensor
+        Placeholder for labels.
+    - loss: Tensor
+        Computed loss function.
+    - train_step
+        Loss minimizer.
+    """
+
+    inputs, outputs = base_model
+    labels = tf.placeholder(name='labels', dtype=tf.int8)
+    anchor_positive_mask = get_anchor_positive_mask(labels)
+    negetive_mask = get_negative_mask(labels)
+    
+    loss = compute_loss(
+        model=(inputs, outputs), 
+        metric=metric, 
+        masks=(anchor_positive_mask, negetive_mask), 
+        margin=margin,
+    )
+    
+    train_step = optimizer.minimize(loss)
+
+    return inputs, outputs, labels, loss, train_step
+
 def validate_siamese_model(
     session,
     model, 
@@ -175,7 +219,6 @@ def train_siamese_model(
     dirs, 
     class_labels, 
     metric, 
-    optimizer,
     batch_loader,
     margin=0.2, 
     num_per_class=5, 
@@ -189,7 +232,7 @@ def train_siamese_model(
     -----------
     - session: Tensorflow Session instance.
     - model: tuple
-        Sould contain two tensors (model input, model output).
+        Sould contain tensors (inputs, outputs, labels, loss, train_step), described in create_graph function.
     - source_path: string
         Path to model data.
     - dirs: [[string], [string]]
@@ -198,7 +241,6 @@ def train_siamese_model(
         Lists of training and validation class labels.
     - metric: Function
         Should take output tensor as a parameter and compute distance matrix between outputs.
-    - optimizer: Tensorflow optimizer instance
     - batch_loader: Function
         Should take source_path, train_dirs, train_labels, num_per_class as parameters
         and return an iterator [samples, batch_lables]
@@ -218,20 +260,8 @@ def train_siamese_model(
     
     train_dirs, val_dirs = dirs
     train_labels, val_labels = class_labels
-    
-    inputs, outputs = model
-    labels = tf.placeholder(name='labels', dtype=tf.int8)
-    anchor_positive_mask = get_anchor_positive_mask(labels)
-    negetive_mask = get_negative_mask(labels)
-    
-    loss = compute_loss(
-        model=(inputs, outputs), 
-        metric=metric, 
-        masks=(anchor_positive_mask, negetive_mask), 
-        margin=margin,
-    )
-    
-    train_step = optimizer.minimize(loss)
+    inputs, outputs, labels, loss, train_step = model
+   
     session.run(tf.global_variables_initializer())
     
     for i in range(num_iter):
