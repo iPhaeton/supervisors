@@ -144,19 +144,23 @@ def create_graph(base_model, metric, margin, optimizer):
         Loss minimizer.
     """
 
-    inputs, outputs = base_model
-    labels = tf.placeholder(name='labels', dtype=tf.int8)
-    anchor_positive_mask = get_anchor_positive_mask(labels)
-    negetive_mask = get_negative_mask(labels)
+    with tf.name_scope('base_model'):
+        inputs, outputs = base_model
     
-    loss = compute_loss(
-        model=(inputs, outputs), 
-        metric=metric, 
-        masks=(anchor_positive_mask, negetive_mask), 
-        margin=margin,
-    )
+    with tf.name_scope('loss'):
+        labels = tf.placeholder(name='labels', dtype=tf.int8)
+        anchor_positive_mask = get_anchor_positive_mask(labels)
+        negetive_mask = get_negative_mask(labels)
+
+        loss = compute_loss(
+            model=(inputs, outputs), 
+            metric=metric, 
+            masks=(anchor_positive_mask, negetive_mask), 
+            margin=margin,
+        )
     
-    train_step = optimizer.minimize(loss)
+    with tf.name_scope('train_step'):
+        train_step = optimizer.minimize(loss)
 
     return inputs, outputs, labels, loss, train_step
 
