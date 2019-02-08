@@ -114,6 +114,7 @@ def compute_loss(model, metric, masks, margin):
     )(tf.greater(loss, 0.))
     
     loss = tf.reduce_sum(loss) / (num_triplets + 1e-16)
+    tf.summary.scalar('loss', loss)
 
     return loss
 
@@ -273,17 +274,19 @@ def train_siamese_model(
     session.run(tf.global_variables_initializer())
     
     for i in range(num_iter):
-        if observer != None:
-            observer.emit(ON_ITER_START, i)
-
         samples, batch_lables = batch_loader(source_path, train_dirs, train_labels, num_per_class, batch_size)
-        batch_loss, _ = session.run([loss, train_step], {
+        feed_dict = {
             inputs: samples,
             labels: batch_lables,
-        })
+        }
 
         if observer != None:
-            observer.emit(ON_ITER_END, i)
+            observer.emit(ON_ITER_START, i, feed_dict)
+
+        batch_loss, _ = session.run([loss, train_step], feed_dict)
+
+        if observer != None:
+            observer.emit(ON_ITER_END, i, feed_dict)
 
         val_loss = validate_siamese_model(
             session=session, 

@@ -65,6 +65,7 @@ def siamese_job(source_path, model_path, **kwargs):
         num_per_class=num_per_class,
         batch_size=batch_size,
         log_dir=LOG_DIR_PATH,
+        log_every=5,
         observer=observer,
     )
 
