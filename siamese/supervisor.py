@@ -162,10 +162,10 @@ def train_siamese_model(
     session.run(tf.global_variables_initializer())
     
     for i in range(num_iter):
-        samples, batch_lables = batch_loader(source_path, train_dirs, train_labels, num_per_class, batch_size)
+        samples, batch_labels = batch_loader(source_path, train_dirs, train_labels, num_per_class, batch_size)
         feed_dict = {
             inputs: samples,
-            labels: batch_lables,
+            labels: batch_labels,
         }
 
         if observer != None:
