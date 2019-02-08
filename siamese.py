@@ -288,18 +288,18 @@ def train_siamese_model(
         if observer != None:
             observer.emit(ON_ITER_END, i, feed_dict)
 
-        val_loss = validate_siamese_model(
-            session=session, 
-            model=[inputs, labels, loss], 
-            source_path=source_path, 
-            val_dirs=val_dirs,
-            val_labels=val_labels,
-            metric=metric,
-            margin=margin,
-            batch_loader=batch_loader,
-            num_per_class=num_per_class,
-            batch_size=batch_size,
-        )
+        # val_loss = validate_siamese_model(
+        #     session=session, 
+        #     model=[inputs, labels, loss], 
+        #     source_path=source_path, 
+        #     val_dirs=val_dirs,
+        #     val_labels=val_labels,
+        #     metric=metric,
+        #     margin=margin,
+        #     batch_loader=batch_loader,
+        #     num_per_class=num_per_class,
+        #     batch_size=batch_size,
+        # )
 
         print(f'{{"metric": "Train loss", "value"{batch_loss}}}')
-        print(f'{{"metric": "Val loss", "value"{val_loss}}}')
+        # print(f'{{"metric": "Val loss", "value"{val_loss}}}')
