@@ -7,7 +7,7 @@ from sklearn.model_selection import train_test_split
 from loaders.data import load_batch_of_images, cv2_loader
 from loaders.models import load_model_pb
 from utils.metrics import cosine_distance
-from siamese import train_siamese_model, create_graph as create_siamese_graph
+from siamese.supervisor import train_siamese_model, create_graph as create_siamese_graph
 import argparse
 from constants import LOG_DIR_PATH
 from auxillaries.events import EventAggregator
