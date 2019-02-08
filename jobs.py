@@ -4,7 +4,8 @@ from utils.curried_functions import tf_add, tf_cast, tf_multiply, filter_list
 from utils.common import classes_to_labels
 import os
 from sklearn.model_selection import train_test_split
-from loaders import load_batch_of_images, load_model_pb, cv2_loader
+from loaders.data import load_batch_of_images, cv2_loader
+from loaders.models import load_model_pb
 from utils.metrics import cosine_distance
 from siamese import train_siamese_model, create_graph as create_siamese_graph
 import argparse
