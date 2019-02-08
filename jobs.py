@@ -9,6 +9,7 @@ from utils.metrics import cosine_distance
 from siamese import train_siamese_model, create_graph as create_siamese_graph
 import argparse
 from constants import LOG_DIR_PATH
+from auxillaries.events import EventAggregator
 
 import sys
 sys.path.append("..")
@@ -29,6 +30,7 @@ def siamese_job(source_path, model_path, **kwargs):
     num_per_class = kwargs.pop('num_per_class', 5)
     margin = kwargs.pop('margin', 0.2)
     lr = kwargs.pop('lr', 1e-3)
+    observer = kwargs.pop('observer', None)
     
     tf.reset_default_graph()
 
@@ -63,6 +65,7 @@ def siamese_job(source_path, model_path, **kwargs):
         num_per_class=num_per_class,
         batch_size=batch_size,
         log_dir=LOG_DIR_PATH,
+        observer=observer,
     )
 
 def parse_args():
@@ -127,6 +130,8 @@ def main():
     args = parse_args()
     log_args(args)
 
+    observer = EventAggregator()
+    
     if args.job_name == 'siamese':
         siamese_job(
             args.source_path, 
@@ -137,6 +142,7 @@ def main():
             num_per_class=args.num_per_class,
             margin=args.margin,
             lr=args.lr,
+            observer=observer,
         )
 
 if __name__ == '__main__':

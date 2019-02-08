@@ -5,6 +5,7 @@ from pyramda import compose
 from utils.curried_functions import tf_cast, tf_add, tf_multiply
 import numpy as np
 from decorators import with_tensorboard
+from constants import ON_ITER_START, ON_ITER_END
 
 def get_positive_mask(labels):
     """
@@ -230,6 +231,7 @@ def train_siamese_model(
     num_per_class=5, 
     num_iter=100,
     batch_size=None,
+    observer=None,
 ):
     """
     Trains a siamese model
@@ -258,7 +260,7 @@ def train_siamese_model(
         Number of iterations
     - batch_size: int
         Number of classes to use in a single batch. Total number of samples will be batch_size * num_per_class
-
+    - observer: EventAggregator
     Returns:
     --------
     None
@@ -271,11 +273,17 @@ def train_siamese_model(
     session.run(tf.global_variables_initializer())
     
     for i in range(num_iter):
+        if observer != None:
+            observer.emit(ON_ITER_START, i)
+
         samples, batch_lables = batch_loader(source_path, train_dirs, train_labels, num_per_class, batch_size)
         batch_loss, _ = session.run([loss, train_step], {
             inputs: samples,
             labels: batch_lables,
         })
+
+        if observer != None:
+            observer.emit(ON_ITER_END, i)
 
         val_loss = validate_siamese_model(
             session=session, 
