@@ -5,11 +5,11 @@ from utils.common import classes_to_labels
 import os
 from sklearn.model_selection import train_test_split
 from loaders.data import load_batch_of_images, cv2_loader, load_CIFAR10_data
-from loaders.models import load_model_pb, load_simple_model, load_simpler_model
+from loaders.models import load_model_pb, load_simple_model, load_simpler_model,load_complex_model
 from utils.metrics import cosine_distance
 from siamese.supervisor import train_siamese_model, create_graph as create_siamese_graph
 from classifier.supervisor import train_classifier, create_graph as create_classification_graph
-from classifier.losses import compute_hinge_loss
+from classifier.losses import compute_hinge_loss, compute_softmax_loss
 import argparse
 from constants import LOG_DIR_PATH
 from auxillaries.events import EventAggregator
@@ -187,10 +187,14 @@ def main():
         model_loader = load_simple_model
     elif args.model_name == 'simpler':
         model_loader = load_simpler_model
+    elif args.model_name == 'complex':
+        model_loader = load_complex_model
 
     #get loss function
     if args.loss == 'hinge':
         loss_fn = compute_hinge_loss
+    elif args.loss == 'softmax':
+        loss_fn = compute_softmax_loss
 
     #get data loader
     if args.data == 'cifar10':

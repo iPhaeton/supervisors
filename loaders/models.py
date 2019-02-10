@@ -89,3 +89,27 @@ def load_simpler_model():
     h1_flat = tf.reshape(h1,[-1,5408])
     y_out = tf.matmul(h1_flat,W1) + b1
     return X, y_out
+
+def load_complex_model():
+    X = tf.placeholder(tf.float32, [None, 32, 32, 3])
+
+    W1 = tf.get_variable('W1', shape=[7,7,3,32])
+    b1 = tf.get_variable('b1', shape=[32])
+    beta1 = tf.get_variable('beta1', shape=[32])
+    gamma1 = tf.get_variable('gamma1', shape=[32])
+    W2 = tf.get_variable('W2', shape=[5408,1024])
+    b2 = tf.get_variable('b2', shape=[1024])
+    W3 = tf.get_variable('W3', shape=[1024,10])
+    b3 = tf.get_variable('b3', shape=[10])
+    
+    a1 = tf.nn.conv2d(X, W1, strides=[1,1,1,1], padding='VALID') + b1
+    h1 = tf.nn.relu(a1)
+    h1_mean, h1_var = tf.nn.moments(h1, axes=[0,1,2])
+    h1_norm = tf.nn.batch_normalization(h1, mean=h1_mean, variance=h1_var, offset=beta1, scale=gamma1, variance_epsilon=1e-5)
+    h1_pool = tf.nn.max_pool(h1_norm, ksize=[1,2,2,1], strides=[1,2,2,1], padding='VALID')
+    h1_flat = tf.reshape(h1_pool, [-1,5408])
+    a2= tf.matmul(h1_flat, W2) + b2
+    h2 = tf.nn.relu(a2)
+    y_out = tf.matmul(h2, W3) + b3
+    
+    return X, y_out
