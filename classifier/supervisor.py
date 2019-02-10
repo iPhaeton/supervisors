@@ -1,9 +1,10 @@
 import tensorflow as tf
 import numpy as np
+import math
 
 import sys
 sys.path.append("..")
-from classifier.losses import compute_hinge_loss
+from classifier.losses import compute_hinge_loss, compute_accuracy
 from constants import ON_ITER_START, ON_ITER_END
 
 def create_graph(base_model, loss_fn, optimizer):
@@ -22,6 +23,7 @@ def create_graph(base_model, loss_fn, optimizer):
 def train_classifier(
     session,
     model, 
+    source_path,
     data_loader,
     num_iter=100,
     batch_size=None,
@@ -29,24 +31,36 @@ def train_classifier(
 ):
     inputs, outputs, labels, loss, train_step = model
 
+    accuracy = compute_accuracy(outputs, labels)
+
     session.run(tf.global_variables_initializer())
-    samples, data_labels = data_loader()
+    samples, data_labels, samples_val, labels_val, samples_test, labels_test = data_loader(source_path)
 
+    iter_count = 0
     for i in range(num_iter):
-        batch = np.random.choice(samples, size=batch_size)
-        batch_labels = np.random.choice(data_labels, size=batch_size)
+        indices = np.random.permutation(range(samples.shape[0]))
+        for j in range(int(math.ceil(samples.shape[0]/batch_size))):
+            start_idx = j * batch_size
+            end_idx = start_idx + batch_size
+            batch_indices = indices[start_idx : end_idx]
 
-        feed_dict = {
-            inputs: samples,
-            labels: batch_labels,
-        }
+            batch = samples[batch_indices,:,:,:]
+            batch_labels = data_labels[batch_indices]
 
-        if observer != None:
-            observer.emit(ON_ITER_START, i, feed_dict)
+            feed_dict = {
+                inputs: batch,
+                labels: batch_labels,
+            }
 
-        batch_loss, _ = session.run([loss, train_step], feed_dict)
+            if observer != None:
+                observer.emit(ON_ITER_START, i, feed_dict)
+            
+            batch_loss, batch_accuracy, _ = session.run([loss, accuracy, train_step], feed_dict)
+            
+            if observer != None:
+                observer.emit(ON_ITER_END, i, feed_dict)
 
-        if observer != None:
-            observer.emit(ON_ITER_END, i, feed_dict)
+            if iter_count % 100 == 0:
+                print(f'{iter_count}: {batch_loss}; {batch_accuracy}')
 
-        print(f'{{"metric": "Train loss", "value"{batch_loss}}}')
+            iter_count +=1

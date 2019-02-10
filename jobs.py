@@ -4,10 +4,12 @@ from utils.curried_functions import tf_add, tf_cast, tf_multiply, filter_list
 from utils.common import classes_to_labels
 import os
 from sklearn.model_selection import train_test_split
-from loaders.data import load_batch_of_images, cv2_loader
-from loaders.models import load_model_pb
+from loaders.data import load_batch_of_images, cv2_loader, load_CIFAR10_data
+from loaders.models import load_model_pb, load_simple_model, load_simpler_model
 from utils.metrics import cosine_distance
 from siamese.supervisor import train_siamese_model, create_graph as create_siamese_graph
+from classifier.supervisor import train_classifier, create_graph as create_classification_graph
+from classifier.losses import compute_hinge_loss
 import argparse
 from constants import LOG_DIR_PATH
 from auxillaries.events import EventAggregator
@@ -22,6 +24,37 @@ def log_args(args):
     for key, value in args.__dict__.items():
         print(f'--{key}={value}')
     print('-----------------------------')
+
+def classification_job(source_path, **kwargs):
+
+    model_loader = kwargs.pop('model_loader', None)
+    graph_creator = kwargs.pop('graph_creator', None)
+    loss_fn = kwargs.pop('loss_fn', None)
+    data_loader = kwargs.pop('data_loader', None)
+    batch_size = kwargs.pop('batch_size', None)
+    num_iter = kwargs.pop('num_iter', 100)
+    lr = kwargs.pop('lr', 1e-3)
+    observer = kwargs.pop('observer', None)
+
+    tf.reset_default_graph()
+
+    inputs, outputs = model_loader()
+    model = create_classification_graph(
+        base_model=[inputs, outputs], 
+        loss_fn=loss_fn,
+        optimizer=tf.train.AdamOptimizer(learning_rate=lr),
+    )
+    session = tf.Session()
+
+    train_classifier(
+        session=session,
+        model=model,
+        source_path=source_path,
+        data_loader=data_loader,
+        num_iter=num_iter,
+        batch_size=batch_size,
+        observer=observer,
+    )
 
 def siamese_job(source_path, model_path, **kwargs):
 
@@ -77,7 +110,7 @@ def parse_args():
     parser.add_argument(
         "--job_name",
         required=True,
-        choices=['siamese'],
+        choices=['siamese', 'classifier'],
         type=str,
     )
     parser.add_argument(
@@ -88,7 +121,7 @@ def parse_args():
     )
     parser.add_argument(
         "--model_path",
-        required=True,
+        default=None,
         help="Path to the model",
         type=str,
     )
@@ -126,6 +159,21 @@ def parse_args():
         help="Learning rate",
         type=float,
     )
+    parser.add_argument(
+        "--model_name",
+        default=None,
+        help="Model name",
+    )
+    parser.add_argument(
+        "--loss",
+        default=None,
+        help="Name of loass function",
+    )
+    parser.add_argument(
+        "--data",
+        default=None,
+        help="Data name",
+    )
     return parser.parse_args()
 
 def main():
@@ -133,8 +181,35 @@ def main():
     log_args(args)
 
     observer = EventAggregator()
-    
-    if args.job_name == 'siamese':
+
+    #get model loader
+    if args.model_name == 'simple':
+        model_loader = load_simple_model
+    elif args.model_name == 'simpler':
+        model_loader = load_simpler_model
+
+    #get loss function
+    if args.loss == 'hinge':
+        loss_fn = compute_hinge_loss
+
+    #get data loader
+    if args.data == 'cifar10':
+        data_loader = load_CIFAR10_data
+
+    #run job
+    if args.job_name == 'classifier':
+        classification_job(
+            args.source_path,
+            model_loader=model_loader,
+            graph_creator=create_classification_graph,
+            loss_fn=loss_fn,
+            data_loader=data_loader,
+            batch_size=args.batch_size,
+            num_iter=args.num_iter,
+            lr=args.lr,
+            observer=observer,
+        )
+    elif args.job_name == 'siamese':
         siamese_job(
             args.source_path, 
             args.model_path, 
