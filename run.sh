@@ -7,7 +7,7 @@ python jobs.py \
     --num_iter=100 \
     --num_per_class=4 \
     --margin=0.2 \
-    --lr=1e-4
+    --lr=1e-3
 
 # python jobs.py \
 #     --job_name=classifier \

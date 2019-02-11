@@ -38,14 +38,20 @@ def create_graph(base_model, metric, margin, optimizer):
         inputs, outputs = base_model
     
     with tf.name_scope('loss'):
-        labels = tf.placeholder(name='labels', dtype=tf.int8)
+        labels = tf.placeholder(name='labels', dtype=tf.int32, shape=(None,))
         anchor_positive_mask = get_anchor_positive_mask(labels)
         negetive_mask = get_negative_mask(labels)
 
-        loss = compute_loss(
-            model=(inputs, outputs), 
-            metric=metric, 
-            masks=(anchor_positive_mask, negetive_mask), 
+        # loss = compute_loss(
+        #     model=(inputs, outputs), 
+        #     metric=metric, 
+        #     masks=(anchor_positive_mask, negetive_mask), 
+        #     margin=margin,
+        # )
+        
+        loss = tf.contrib.losses.metric_learning.triplet_semihard_loss(
+            labels=labels,
+            embeddings=outputs,
             margin=margin,
         )
     
