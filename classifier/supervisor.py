@@ -6,6 +6,7 @@ import sys
 sys.path.append("..")
 from classifier.losses import compute_hinge_loss, compute_accuracy
 from constants import ON_ITER_START, ON_ITER_END
+from loaders.batch import load_batch_of_data
 
 def create_graph(base_model, loss_fn, optimizer):
     with tf.name_scope('base_model'):
@@ -34,18 +35,14 @@ def train_classifier(
     accuracy = compute_accuracy(outputs, labels)
 
     session.run(tf.global_variables_initializer())
-    samples, data_labels, samples_val, labels_val, samples_test, labels_test = data_loader(source_path)
+    if data_loader != None:
+        samples, data_labels, samples_val, labels_val, samples_test, labels_test = data_loader(source_path)
 
     iter_count = 0
     for i in range(num_iter):
         indices = np.random.permutation(range(samples.shape[0]))
         for j in range(int(math.ceil(samples.shape[0]/batch_size))):
-            start_idx = j * batch_size
-            end_idx = start_idx + batch_size
-            batch_indices = indices[start_idx : end_idx]
-
-            batch = samples[batch_indices,:,:,:]
-            batch_labels = data_labels[batch_indices]
+            batch, batch_labels = load_batch_of_data(samples[indices,:,:,:], data_labels[indices], batch_size, j)
 
             feed_dict = {
                 inputs: batch,
