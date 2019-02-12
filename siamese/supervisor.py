@@ -54,6 +54,8 @@ def create_graph(base_model, metric, margin, optimizer):
             embeddings=outputs,
             margin=margin,
         )
+
+        tf.summary.scalar('loss', loss)
     
     with tf.name_scope('train_step'):
         train_step = optimizer.minimize(loss)
@@ -168,7 +170,7 @@ def train_siamese_model(
     session.run(tf.global_variables_initializer())
     
     for i in range(num_iter):
-        samples, batch_labels = batch_loader(source_path, train_dirs, train_labels, num_per_class, batch_size)
+        samples, batch_labels = batch_loader(source_path, train_dirs, train_labels, num_per_class, None)
         feed_dict = {
             inputs: samples,
             labels: batch_labels,

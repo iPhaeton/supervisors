@@ -76,7 +76,7 @@ def siamese_job(source_path, model_path, **kwargs):
     )(source_path)
 
     labels = classes_to_labels(dirs)
-    train_dirs, val_dirs, train_labels, val_labels = train_test_split(dirs, labels, test_size=0.1)
+    #train_dirs, val_dirs, train_labels, val_labels = train_test_split(dirs, labels, test_size=0.1)
 
     inputs, outputs, _ = load_model_pb(
         model_path, 
@@ -92,8 +92,8 @@ def siamese_job(source_path, model_path, **kwargs):
         session=session,
         model=model,
         source_path=source_path,
-        dirs=(train_dirs, val_dirs),
-        class_labels=(train_labels, val_labels),
+        dirs=(dirs[0:30], []),
+        class_labels=(labels[0:30], []),
         metric=cosine_distance,
         batch_loader=load_batch_of_images(image_shape=(128, 64, 3), loader=cv2_loader),
         margin=margin,
