@@ -7,7 +7,7 @@ from sklearn.model_selection import train_test_split
 from loaders.data import load_CIFAR10_data
 from loaders.batch import load_batch_of_images, cv2_loader, pil_loader, load_batch_of_data
 from loaders.models import load_model_pb, load_simple_model, load_simpler_model,load_complex_model
-from utils.metrics import cosine_distance
+from utils.metrics import cosine_distance, pairwise_distance
 from siamese.supervisor import train_siamese_model, create_graph as create_siamese_graph
 from classifier.supervisor import train_classifier, create_graph as create_classification_graph
 from classifier.losses import compute_hinge_loss, compute_softmax_loss

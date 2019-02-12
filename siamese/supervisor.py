@@ -4,7 +4,7 @@ import sys
 sys.path.append("..")
 from decorators import with_tensorboard
 from constants import ON_ITER_START, ON_ITER_END
-from siamese.triplet_loss import get_anchor_positive_mask, get_negative_mask, compute_loss
+from siamese.triplet_loss import triplet_semihard_loss
 
 def create_graph(base_model, metric, margin, optimizer):
     """
@@ -39,8 +39,8 @@ def create_graph(base_model, metric, margin, optimizer):
     
     with tf.name_scope('loss'):
         labels = tf.placeholder(name='labels', dtype=tf.int32, shape=(None,))
-        anchor_positive_mask = get_anchor_positive_mask(labels)
-        negetive_mask = get_negative_mask(labels)
+        # anchor_positive_mask = get_anchor_positive_mask(labels)
+        # negetive_mask = get_negative_mask(labels)
 
         # loss = compute_loss(
         #     model=(inputs, outputs), 
