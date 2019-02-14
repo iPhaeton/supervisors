@@ -6,19 +6,18 @@ from decorators import with_tensorboard
 from constants import ON_ITER_START, ON_ITER_END
 from siamese.triplet_loss import triplet_semihard_loss
 
-def create_graph(session, base_model, metric, margin, optimizer):
+def create_graph(session, base_model, optimizer, loss_fn):
     """
     Creates graph for a siamese model
     
     Parameters:
     -----------
+    - session: Tensorflow Session instance
     - base_model: tuple
         Sould contain two tensors (base_model input, base_model output).
-    - metric: Function
-        Should take output tensor as a parameter and compute distance matrix between outputs.
-    - margin: float
-        Desired margin between negative and positive samples.
     - optimizer: Tensorflow optimizer instance
+    - loss_fn: Function
+        Loss function
 
     Returns:
     --------
@@ -39,22 +38,7 @@ def create_graph(session, base_model, metric, margin, optimizer):
     
     with tf.name_scope('loss'):
         labels = tf.placeholder(name='labels', dtype=tf.int32, shape=(None,))
-        # anchor_positive_mask = get_anchor_positive_mask(labels)
-        # negetive_mask = get_negative_mask(labels)
-
-        # loss = compute_loss(
-        #     model=(inputs, outputs), 
-        #     metric=metric, 
-        #     masks=(anchor_positive_mask, negetive_mask), 
-        #     margin=margin,
-        # )
-        
-        loss = tf.contrib.losses.metric_learning.triplet_semihard_loss(
-            labels=labels,
-            embeddings=outputs,
-            margin=margin,
-        )
-
+        loss = loss_fn(labels=labels, embeddings=outputs)
         tf.summary.scalar('loss', loss)
     
     with tf.name_scope('train_step'):

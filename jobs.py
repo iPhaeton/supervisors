@@ -14,6 +14,7 @@ from classifier.losses import compute_hinge_loss, compute_softmax_loss
 import argparse
 from constants import LOG_DIR_PATH
 from auxillaries.events import EventAggregator
+from functools import partial
 
 def log_args(args):
     print('-----------------------------')
@@ -55,6 +56,7 @@ def classification_job(source_path, **kwargs):
     )
 
 def siamese_job(source_path, model_loader, **kwargs):
+    loss_fn = kwargs.pop('loss_fn', None)
     batch_size = kwargs.pop('batch_size', None)
     num_iter = kwargs.pop('num_iter', 100)
     num_per_class = kwargs.pop('num_per_class', 5)
@@ -76,7 +78,7 @@ def siamese_job(source_path, model_loader, **kwargs):
     inputs, outputs = model_loader(session)
 
     optimizer = tf.train.AdamOptimizer(learning_rate=lr)
-    model = create_siamese_graph(session=session, base_model=[inputs, outputs], metric=cosine_distance, margin=margin, optimizer=optimizer)
+    model = create_siamese_graph(session=session, base_model=[inputs, outputs], optimizer=optimizer, loss_fn=loss_fn)
 
     train_siamese_model(
         session=session,
@@ -134,6 +136,12 @@ def parse_args():
         type=int
     )
     parser.add_argument(
+        "--metric",
+        default='eucledian',
+        help="Metric for simese model loss",
+        type=str,
+    )
+    parser.add_argument(
         "--margin",
         default=0.2,
         help="Desired margin between positive and negarive distances",
@@ -186,6 +194,8 @@ def main():
         loss_fn = compute_hinge_loss
     elif args.loss == 'softmax':
         loss_fn = compute_softmax_loss
+    elif args.loss == 'triplet':
+        loss_fn = partial(tf.contrib.losses.metric_learning.triplet_semihard_loss, margin=args.margin)
 
     #get data loader
     if args.data == 'cifar10':
@@ -208,6 +218,7 @@ def main():
         siamese_job(
             args.source_path, 
             model_loader,
+            loss_fn=loss_fn,
             batch_size=args.batch_size, 
             num_iter=args.num_iter,
             num_per_class=args.num_per_class,
