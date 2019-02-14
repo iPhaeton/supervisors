@@ -6,7 +6,7 @@ from decorators import with_tensorboard
 from constants import ON_ITER_START, ON_ITER_END
 from siamese.triplet_loss import triplet_semihard_loss
 
-def create_graph(base_model, metric, margin, optimizer):
+def create_graph(session, base_model, metric, margin, optimizer):
     """
     Creates graph for a siamese model
     
@@ -59,7 +59,8 @@ def create_graph(base_model, metric, margin, optimizer):
     
     with tf.name_scope('train_step'):
         train_step = optimizer.minimize(loss)
-
+    
+    session.run(tf.variables_initializer(optimizer.variables()))
     return inputs, outputs, labels, loss, train_step
 
 def validate_siamese_model(
@@ -166,8 +167,6 @@ def train_siamese_model(
     train_dirs, val_dirs = dirs
     train_labels, val_labels = class_labels
     inputs, outputs, labels, loss, train_step = model
-   
-    session.run(tf.global_variables_initializer())
     
     for i in range(num_iter):
         samples, batch_labels = batch_loader(source_path, train_dirs, train_labels, num_per_class, None)

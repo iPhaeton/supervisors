@@ -40,7 +40,7 @@ def load_model_pb(session, checkpoint_filename, **kwargs):
     
     saver = tf.train.Saver(slim.get_variables_to_restore())
     saver.restore(session, checkpoint_filename)
-    
+
     return inputs, outputs
 
 def load_simple_model():

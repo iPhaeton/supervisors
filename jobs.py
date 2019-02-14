@@ -85,7 +85,8 @@ def siamese_job(source_path, model_path, **kwargs):
         graph_creator=graph_creator,
     )
 
-    model = create_siamese_graph(base_model=[inputs, outputs], metric=cosine_distance, margin=margin, optimizer=tf.train.AdamOptimizer(learning_rate=lr),)
+    optimizer = tf.train.AdamOptimizer(learning_rate=lr)
+    model = create_siamese_graph(session=session, base_model=[inputs, outputs], metric=cosine_distance, margin=margin, optimizer=optimizer)
 
     train_siamese_model(
         session=session,
