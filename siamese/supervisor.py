@@ -2,8 +2,8 @@ import tensorflow as tf
 
 import sys
 sys.path.append("..")
-from decorators import with_tensorboard, with_saver
-from constants import ON_ITER_START, ON_ITER_END, ON_LOG
+from decorators import with_tensorboard, with_saver, with_validator
+from constants import ON_ITER_START, ON_ITER_END, ON_LOG, ON_VALIDATION
 
 def create_graph(session, base_model, optimizer, loss_fn, is_pretrained):
     """
@@ -102,11 +102,11 @@ def validate_siamese_model(
 
 @with_saver
 @with_tensorboard
+@with_validator
 def train_siamese_model(
     session,
     model, 
     batch_loader, 
-    val_batch_loader,
     is_pretrained,
     num_iter=100,
     observer=None,
@@ -147,12 +147,13 @@ def train_siamese_model(
 
         if observer != None:
             observer.emit(ON_LOG, i, feed_dict, [training_summary])
+            observer.emit(ON_VALIDATION, i, [inputs, labels], validation_summary)
 
-            val_samples, val_batch_labels = val_batch_loader()
-            observer.emit(ON_LOG, i, {
-                inputs: val_samples,
-                labels: val_batch_labels,
-            }, [validation_summary])
+            # val_samples, val_batch_labels = val_batch_loader()
+            # observer.emit(ON_LOG, i, {
+            #     inputs: val_samples,
+            #     labels: val_batch_labels,
+            # }, [validation_summary])
 
         batch_loss, _ = session.run([loss, train_step], feed_dict)
 

@@ -1,6 +1,6 @@
 import tensorflow as tf
 import shutil
-from constants import ON_ITER_START, ON_ITER_END, ON_LOG
+from constants import ON_ITER_START, ON_ITER_END, ON_LOG, ON_VALIDATION
 import os
 
 def partially_applied(func):
@@ -39,6 +39,30 @@ def with_tensorboard(func):
         return func(*args, **kwargs)
     
     return wrapper
+
+def with_validator(func):
+    def wrapper(*args, **kwargs):
+        val_batch_loader = kwargs.pop('val_batch_loader', None)
+        observer = kwargs.get('observer', None)
+
+        def validate(i, model, validation_summary):
+            if i % 5 != 0:
+                return
+
+            inputs, labels = model
+            val_samples, val_batch_labels = val_batch_loader()
+            observer.emit(ON_LOG, i, {
+                inputs: val_samples,
+                labels: val_batch_labels,
+            }, [validation_summary])
+
+        if observer != None:
+            observer.add_listener(ON_VALIDATION, validate)
+        
+        return func(*args, **kwargs)
+    
+    return wrapper
+
 
 def with_saver(func):
     def wrapper(*args, **kwargs):
