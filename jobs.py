@@ -95,6 +95,8 @@ def siamese_job(source_path, model_loader, **kwargs):
         ),
         num_iter=num_iter,
         observer=observer,
+        log_dir=LOG_DIR_PATH,
+        log_every=5,
     )
 
 def parse_args():
