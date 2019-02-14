@@ -24,12 +24,14 @@ def with_tensorboard(func):
             writer.add_graph(session.graph)
             merged_summary = tf.summary.merge_all()
 
-            def log_summary(i, feed_dict):
+            def log_summary(i, feed_dict, summaries):
                 if i % log_every != 0:
                     return
-
-                s = session.run(merged_summary, feed_dict)
-                writer.add_summary(s, i)
+                
+                summaries.append(merged_summary)
+                calculated_summaries = session.run(summaries, feed_dict)
+                for s in calculated_summaries:
+                    writer.add_summary(s, i)
 
             if observer != None:
                 observer.add_listener(ON_ITER_START, log_summary)

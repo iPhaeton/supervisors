@@ -38,7 +38,7 @@ def create_graph(session, base_model, optimizer, loss_fn, is_pretrained):
     with tf.name_scope('loss'):
         labels = tf.placeholder(name='labels', dtype=tf.int32, shape=(None,))
         loss = loss_fn(labels=labels, embeddings=outputs)
-        tf.summary.scalar('loss', loss)
+        #tf.summary.scalar('loss', loss)
     
     with tf.name_scope('train_step'):
         train_step = optimizer.minimize(loss)
@@ -106,6 +106,7 @@ def train_siamese_model(
     session,
     model, 
     batch_loader, 
+    val_batch_loader,
     is_pretrained,
     num_iter=100,
     observer=None,
@@ -132,6 +133,8 @@ def train_siamese_model(
     """
     
     inputs, outputs, labels, loss, train_step = model
+    training_summary = tf.summary.scalar("training_loss", loss)
+    validation_summary = tf.summary.scalar("validation_loss", loss)
     if is_pretrained == False:
         session.run(tf.global_variables_initializer())
     
@@ -143,26 +146,17 @@ def train_siamese_model(
         }
 
         if observer != None:
-            observer.emit(ON_ITER_START, i, feed_dict)
+            observer.emit(ON_ITER_START, i, feed_dict, [training_summary])
+
+            val_samples, val_batch_labels = val_batch_loader()
+            observer.emit(ON_ITER_START, i, {
+                inputs: val_samples,
+                labels: val_batch_labels,
+            }, [validation_summary])
 
         batch_loss, _ = session.run([loss, train_step], feed_dict)
 
         if observer != None:
             observer.emit(ON_ITER_END, i, feed_dict)
 
-
-        # val_loss = validate_siamese_model(
-        #     session=session, 
-        #     model=[inputs, labels, loss], 
-        #     source_path=source_path, 
-        #     val_dirs=val_dirs,
-        #     val_labels=val_labels,
-        #     metric=metric,
-        #     margin=margin,
-        #     batch_loader=batch_loader,
-        #     num_per_class=num_per_class,
-        #     batch_size=batch_size,
-        # )
-
-        print(f'{{"metric": "Train loss", "value"{batch_loss}}}')
-        # print(f'{{"metric": "Val loss", "value"{val_loss}}}')
+        print(f'{{"metric": "Train loss", "value": "{batch_loss}"}}')
