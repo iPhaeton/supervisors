@@ -2,7 +2,7 @@ import tensorflow as tf
 
 import sys
 sys.path.append("..")
-from decorators import with_tensorboard
+from decorators import with_tensorboard, with_saver
 from constants import ON_ITER_START, ON_ITER_END
 
 def create_graph(session, base_model, optimizer, loss_fn, is_pretrained):
@@ -100,6 +100,7 @@ def validate_siamese_model(
 
     return batch_loss
 
+@with_saver
 @with_tensorboard
 def train_siamese_model(
     session,
@@ -148,6 +149,7 @@ def train_siamese_model(
 
         if observer != None:
             observer.emit(ON_ITER_END, i, feed_dict)
+
 
         # val_loss = validate_siamese_model(
         #     session=session, 

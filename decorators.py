@@ -1,6 +1,7 @@
 import tensorflow as tf
 import shutil
 from constants import ON_ITER_START, ON_ITER_END
+import os
 
 def partially_applied(func):
     def outer_wrapper(**kwargs):
@@ -10,7 +11,7 @@ def partially_applied(func):
     return outer_wrapper
 
 def with_tensorboard(func):
-    def wrapper(**kwargs):
+    def wrapper(*args, **kwargs):
         log_dir = kwargs.pop('log_dir', None)
         log_every = kwargs.pop('log_every', 5)
         session = kwargs.get('session')
@@ -33,6 +34,25 @@ def with_tensorboard(func):
             if observer != None:
                 observer.add_listener(ON_ITER_START, log_summary)
         
-        return func(**kwargs)
+        return func(*args, **kwargs)
     
+    return wrapper
+
+def with_saver(func):
+    def wrapper(*args, **kwargs):
+        saver = tf.train.Saver()
+        save_dir = kwargs.pop('save_dir', None)
+        save_every = kwargs.pop('save_every', 5)
+        session = kwargs.get('session')
+        observer = kwargs.get('observer', None)
+
+        def save(i, _):
+            if (i % save_every == 0) & (i != 0):
+                saver.save(session, os.path.join(save_dir, f'iteration-{i}.ckpt'))
+
+        if observer != None:
+            observer.add_listener(ON_ITER_END, save)
+
+        return func(*args, **kwargs)
+
     return wrapper

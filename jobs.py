@@ -59,13 +59,8 @@ def classification_job(source_path, **kwargs):
 def siamese_job(source_path, model_loader, **kwargs):
     loss_fn = kwargs.pop('loss_fn', None)
     batch_size = kwargs.pop('batch_size', None)
-    num_iter = kwargs.pop('num_iter', 100)
     num_per_class = kwargs.pop('num_per_class', 5)
-    margin = kwargs.pop('margin', 0.2)
     lr = kwargs.pop('lr', 1e-3)
-    observer = kwargs.pop('observer', None)
-    is_pretrained = kwargs.pop('is_pretrained', None)
-    log_every = kwargs.pop('log_every', None)
     
     tf.reset_default_graph()
 
@@ -95,11 +90,9 @@ def siamese_job(source_path, model_loader, **kwargs):
             image_shape=(128, 64, 3), 
             loader=cv2_loader,
         ),
-        num_iter=num_iter,
-        observer=observer,
         log_dir=LOG_DIR_PATH,
-        log_every=log_every,
         is_pretrained=is_pretrained,
+        **kwargs,
     )
 
 def parse_args():
@@ -189,6 +182,18 @@ def parse_args():
         help="Number of iterations between logs",
         type=int
     )
+    parser.add_argument(
+        "--save_every",
+        default=5,
+        help="Number of iterations between saves",
+        type=int
+    )
+    parser.add_argument(
+        "--save_dir",
+        default=None,
+        help="Directory to save checkpoints",
+        type=str
+    )
     return parser.parse_args()
 
 def main():
@@ -249,10 +254,11 @@ def main():
             batch_size=args.batch_size, 
             num_iter=args.num_iter,
             num_per_class=args.num_per_class,
-            margin=args.margin,
             lr=args.lr,
             observer=observer,
-            log_every=args.log_every
+            log_every=args.log_every,
+            save_every=args.save_every,
+            save_dir=args.save_dir,
         )
 
 if __name__ == '__main__':

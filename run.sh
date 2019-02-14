@@ -12,6 +12,8 @@ python jobs.py \
     --margin=0.5 \
     --lr=1e-3 \
     --log_every=5 \
+    --save_dir=./checkpoints \
+    --save_every=5 \
 
 # python jobs.py \
 #     --job_name=classifier \
