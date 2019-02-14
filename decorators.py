@@ -1,6 +1,6 @@
 import tensorflow as tf
 import shutil
-from constants import ON_ITER_START, ON_ITER_END
+from constants import ON_ITER_START, ON_ITER_END, ON_LOG
 import os
 
 def partially_applied(func):
@@ -34,7 +34,7 @@ def with_tensorboard(func):
                     writer.add_summary(s, i)
 
             if observer != None:
-                observer.add_listener(ON_ITER_START, log_summary)
+                observer.add_listener(ON_LOG, log_summary)
         
         return func(*args, **kwargs)
     
