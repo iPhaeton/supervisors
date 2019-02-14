@@ -7,7 +7,7 @@ python jobs.py \
     --num_iter=100 \
     --num_per_class=4 \
     --loss=triplet_semihard \
-    --metric=eucledian \
+    --metric=cosine \
     --margin=0.5 \
     --lr=1e-3
 

@@ -202,7 +202,7 @@ def main():
     elif args.loss == 'softmax':
         loss_fn = compute_softmax_loss
     elif args.loss == 'triplet_semihard':
-        loss_fn = partial(triplet_semihard_loss, metric=eucledian_distance, margin=args.margin)
+        loss_fn = partial(triplet_semihard_loss, metric=metric, margin=args.margin)
 
     #get data loader
     if args.data == 'cifar10':

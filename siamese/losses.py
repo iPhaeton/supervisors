@@ -3,6 +3,7 @@
 from tensorflow.python.ops import array_ops
 from tensorflow.python.ops import math_ops
 from tensorflow.python.framework import dtypes
+from utils.metrics import l2_normalized
 
 def masked_maximum(data, mask, dim=1):
   """Computes the axis wise maximum over chosen elements.
@@ -48,8 +49,7 @@ def triplet_semihard_loss(labels, embeddings, metric, margin=1.0):
     Args:
         labels: 1-D tf.int32 `Tensor` with shape [batch_size] of
         multiclass integer labels.
-        embeddings: 2-D float `Tensor` of embedding vectors. Embeddings should
-        be l2 normalized.
+        embeddings: 2-D float `Tensor` of embedding vectors.
         margin: Float, margin term in the loss definition.
     Returns:
         triplet_loss: tf.float32 scalar.
@@ -60,7 +60,7 @@ def triplet_semihard_loss(labels, embeddings, metric, margin=1.0):
     labels = array_ops.reshape(labels, [lshape[0], 1])
 
     # Build pairwise squared distance matrix.
-    pdist_matrix = metric(embeddings)
+    pdist_matrix = metric(l2_normalized(embeddings))
     # Build pairwise binary adjacency matrix.
     adjacency = math_ops.equal(labels, array_ops.transpose(labels))
     # Invert so we can select negatives only.

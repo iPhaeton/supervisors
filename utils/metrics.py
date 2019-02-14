@@ -3,6 +3,12 @@ from tensorflow.python.ops import array_ops
 from tensorflow.python.ops import math_ops
 from tensorflow.python.framework import dtypes
 
+def l2_normalized(embeddings):
+    return tf.divide(
+        embeddings,
+        tf.norm(embeddings),
+    )
+
 def cosine_distance(embeddings):
     """
     Compute cosine distance matrix
@@ -15,14 +21,9 @@ def cosine_distance(embeddings):
         E - embedding size
     """
     
-    normalized_embeddings = tf.divide(
-        embeddings,
-        tf.norm(embeddings),
-    )
-    
     return tf.subtract(
         1.,
-        tf.matmul(normalized_embeddings, tf.transpose(normalized_embeddings))
+        tf.matmul(embeddings, tf.transpose(embeddings))
     )
 
 def eucledian_distance(feature, squared=False):
@@ -34,6 +35,7 @@ def eucledian_distance(feature, squared=False):
     Returns:
         pairwise_distances: 2-D Tensor of size [number of data, number of data].
     """
+    
     pairwise_distances_squared = math_ops.add(
         math_ops.reduce_sum(math_ops.square(feature), axis=[1], keepdims=True),
         math_ops.reduce_sum(
