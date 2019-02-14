@@ -1,7 +1,7 @@
 python jobs.py \
     --job_name=siamese \
     --source_path=../input/mars/bbox_train/ \
-    --model_path=../input/models/deep_sort_cnn/mars-small128.pb \
+    --model_path=../input/models/deep_sort_cnn \
     --use_graph_creator=True \
     --batch_size=30 \
     --num_iter=100 \

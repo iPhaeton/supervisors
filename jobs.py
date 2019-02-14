@@ -78,15 +78,14 @@ def siamese_job(source_path, model_path, **kwargs):
     labels = classes_to_labels(dirs)
     #train_dirs, val_dirs, train_labels, val_labels = train_test_split(dirs, labels, test_size=0.1)
 
-    inputs, outputs, _ = load_model_pb(
-        model_path, 
-        input_name="images", 
-        output_name="features", 
+    session = tf.Session()
+    inputs, outputs = load_model_pb(
+        session, 
+        os.path.join(model_path, 'mars-small128.ckpt-68577'),
         graph_creator=graph_creator,
     )
 
     model = create_siamese_graph(base_model=[inputs, outputs], metric=cosine_distance, margin=margin, optimizer=tf.train.AdamOptimizer(learning_rate=lr),)
-    session = tf.Session()
 
     train_siamese_model(
         session=session,

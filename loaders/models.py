@@ -1,6 +1,7 @@
 import tensorflow as tf
+import tensorflow.contrib.slim as slim
 
-def load_model_pb(checkpoint_filename, input_name, output_name, **kwargs):
+def load_model_pb(session, checkpoint_filename, **kwargs):
     """
     Load a model from saved .pb file and checkpoint
     
@@ -37,17 +38,10 @@ def load_model_pb(checkpoint_filename, input_name, output_name, **kwargs):
     if graph_creator != None:
         inputs, outputs = graph_creator()
     
-    with tf.gfile.GFile(checkpoint_filename, "rb") as file_handle:
-        graph_def = tf.GraphDef()
-        graph_def.ParseFromString(file_handle.read())
+    saver = tf.train.Saver(slim.get_variables_to_restore())
+    saver.restore(session, checkpoint_filename)
     
-    tf.import_graph_def(graph_def, name="net")
-    
-    if graph_creator == None:
-        inputs = tf.get_default_graph().get_tensor_by_name("net/%s:0" % input_name)
-        outputs = tf.get_default_graph().get_tensor_by_name("net/%s:0" % output_name)
-    
-    return inputs, outputs, graph_def
+    return inputs, outputs
 
 def load_simple_model():
     X = tf.placeholder(tf.float32, [None, 64, 64, 3])
