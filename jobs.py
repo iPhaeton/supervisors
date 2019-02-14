@@ -6,7 +6,7 @@ import os
 from sklearn.model_selection import train_test_split
 from loaders.data import load_CIFAR10_data
 from loaders.batch import load_batch_of_images, cv2_loader, pil_loader, load_batch_of_data
-from loaders.models import load_model_pb, load_simple_model, load_simpler_model,load_complex_model
+from loaders.models import load_deep_sort_cnn, load_simple_model, load_simpler_model,load_complex_model
 from utils.metrics import cosine_distance, pairwise_distance
 from siamese.supervisor import train_siamese_model, create_graph as create_siamese_graph
 from classifier.supervisor import train_classifier, create_graph as create_classification_graph
@@ -14,10 +14,6 @@ from classifier.losses import compute_hinge_loss, compute_softmax_loss
 import argparse
 from constants import LOG_DIR_PATH
 from auxillaries.events import EventAggregator
-
-import sys
-sys.path.append("..")
-from input.models.deep_sort_cnn.freeze_model import create_graph
 
 def log_args(args):
     print('-----------------------------')
@@ -58,9 +54,7 @@ def classification_job(source_path, **kwargs):
         observer=observer,
     )
 
-def siamese_job(source_path, model_path, **kwargs):
-
-    graph_creator = kwargs.pop('graph_creator', None)
+def siamese_job(source_path, model_loader, **kwargs):
     batch_size = kwargs.pop('batch_size', None)
     num_iter = kwargs.pop('num_iter', 100)
     num_per_class = kwargs.pop('num_per_class', 5)
@@ -79,11 +73,7 @@ def siamese_job(source_path, model_path, **kwargs):
     #train_dirs, val_dirs, train_labels, val_labels = train_test_split(dirs, labels, test_size=0.1)
 
     session = tf.Session()
-    inputs, outputs = load_model_pb(
-        session, 
-        os.path.join(model_path, 'mars-small128.ckpt-68577'),
-        graph_creator=graph_creator,
-    )
+    inputs, outputs = model_loader(session)
 
     optimizer = tf.train.AdamOptimizer(learning_rate=lr)
     model = create_siamese_graph(session=session, base_model=[inputs, outputs], metric=cosine_distance, margin=margin, optimizer=optimizer)
@@ -125,11 +115,6 @@ def parse_args():
         default=None,
         help="Path to the model",
         type=str,
-    )
-    parser.add_argument(
-        "--use_graph_creator",
-        default=False,
-        type=bool,
     )
     parser.add_argument(
         "--batch_size",
@@ -190,6 +175,11 @@ def main():
         model_loader = load_simpler_model
     elif args.model_name == 'complex':
         model_loader = load_complex_model
+    elif args.model_name == 'deep_sort_cnn':
+        model_loader = load_deep_sort_cnn(
+            model_path=os.path.join(args.model_path, 'freeze_model.py'), 
+            checkpoint_path=os.path.join(args.model_path, 'mars-small128.ckpt-68577')
+        )
 
     #get loss function
     if args.loss == 'hinge':
@@ -217,8 +207,7 @@ def main():
     elif args.job_name == 'siamese':
         siamese_job(
             args.source_path, 
-            args.model_path, 
-            graph_creator=create_graph if args.use_graph_creator else None, 
+            model_loader,
             batch_size=args.batch_size, 
             num_iter=args.num_iter,
             num_per_class=args.num_per_class,

@@ -1,8 +1,8 @@
 python jobs.py \
     --job_name=siamese \
+    --model_name=deep_sort_cnn \
     --source_path=../input/mars/bbox_train/ \
     --model_path=../input/models/deep_sort_cnn \
-    --use_graph_creator=True \
     --batch_size=30 \
     --num_iter=100 \
     --num_per_class=4 \

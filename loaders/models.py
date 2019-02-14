@@ -1,23 +1,20 @@
 import tensorflow as tf
 import tensorflow.contrib.slim as slim
+import importlib.util
+from decorators import partially_applied
 
-def load_model_pb(session, checkpoint_filename, **kwargs):
+@partially_applied
+def load_deep_sort_cnn(session, model_path, checkpoint_path):
     """
     Load a model from saved .pb file and checkpoint
     
     Parameters:
     -----------
-    - checkpoint_filename: string
-        Path to the checkpoint on disk.
-    - input_name: string
-        Name of the input variable in the graph.
-    - output_name: string
-        Name of the output variable in the graph.
-
-    Keyword arguments:
-    ------------------
-    - graph_creator: Function
-        Should create the model graph
+    - session: Tensorflow Session instance
+    - model_path: string
+        Path to the model definition .py file.
+    - checkpoint_path: string
+        Path to the model checkpoint file
         
     Returns:
     --------
@@ -32,14 +29,14 @@ def load_model_pb(session, checkpoint_filename, **kwargs):
         N - number of samples (None)
         E - embedding size
     """
-    graph_creator = kwargs.pop('graph_creator', None)
-    
-    inputs, outputs = None, None
-    if graph_creator != None:
-        inputs, outputs = graph_creator()
+    spec = importlib.util.spec_from_file_location("module.model", model_path)
+    model = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(model)
+    create_graph = model.create_graph
+    inputs, outputs = create_graph(session)
     
     saver = tf.train.Saver(slim.get_variables_to_restore())
-    saver.restore(session, checkpoint_filename)
+    saver.restore(session, checkpoint_path)
 
     return inputs, outputs
 
