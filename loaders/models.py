@@ -35,10 +35,11 @@ def load_deep_sort_cnn(session, model_path, checkpoint_path):
     create_graph = model.create_graph
     inputs, outputs = create_graph(session)
     
-    saver = tf.train.Saver(slim.get_variables_to_restore())
-    saver.restore(session, checkpoint_path)
+    if checkpoint_path != None:
+        saver = tf.train.Saver(slim.get_variables_to_restore())
+        saver.restore(session, checkpoint_path)
 
-    return inputs, outputs
+    return inputs, outputs, checkpoint_path != None
 
 def load_simple_model():
     X = tf.placeholder(tf.float32, [None, 64, 64, 3])

@@ -64,6 +64,7 @@ def siamese_job(source_path, model_loader, **kwargs):
     margin = kwargs.pop('margin', 0.2)
     lr = kwargs.pop('lr', 1e-3)
     observer = kwargs.pop('observer', None)
+    is_pretrained = kwargs.pop('is_pretrained', None)
     
     tf.reset_default_graph()
 
@@ -76,10 +77,10 @@ def siamese_job(source_path, model_loader, **kwargs):
     #train_dirs, val_dirs, train_labels, val_labels = train_test_split(dirs, labels, test_size=0.1)
 
     session = tf.Session()
-    inputs, outputs = model_loader(session)
+    inputs, outputs, is_pretrained = model_loader(session)
 
     optimizer = tf.train.AdamOptimizer(learning_rate=lr)
-    model = create_siamese_graph(session=session, base_model=[inputs, outputs], optimizer=optimizer, loss_fn=loss_fn)
+    model = create_siamese_graph(session=session, base_model=[inputs, outputs], optimizer=optimizer, loss_fn=loss_fn, is_pretrained=is_pretrained)
 
     train_siamese_model(
         session=session,
@@ -97,6 +98,7 @@ def siamese_job(source_path, model_loader, **kwargs):
         observer=observer,
         log_dir=LOG_DIR_PATH,
         log_every=5,
+        is_pretrained=is_pretrained,
     )
 
 def parse_args():
@@ -119,6 +121,12 @@ def parse_args():
         "--model_path",
         default=None,
         help="Path to the model",
+        type=str,
+    )
+    parser.add_argument(
+        "--checkpoint_path",
+        default=None,
+        help="Path to the checkpoint",
         type=str,
     )
     parser.add_argument(
@@ -188,8 +196,8 @@ def main():
         model_loader = load_complex_model
     elif args.model_name == 'deep_sort_cnn':
         model_loader = load_deep_sort_cnn(
-            model_path=os.path.join(args.model_path, 'freeze_model.py'), 
-            checkpoint_path=os.path.join(args.model_path, 'mars-small128.ckpt-68577')
+            model_path=args.model_path, 
+            checkpoint_path=args.checkpoint_path,
         )
 
     #get metric

@@ -5,7 +5,7 @@ sys.path.append("..")
 from decorators import with_tensorboard
 from constants import ON_ITER_START, ON_ITER_END
 
-def create_graph(session, base_model, optimizer, loss_fn):
+def create_graph(session, base_model, optimizer, loss_fn, is_pretrained):
     """
     Creates graph for a siamese model
     
@@ -43,7 +43,8 @@ def create_graph(session, base_model, optimizer, loss_fn):
     with tf.name_scope('train_step'):
         train_step = optimizer.minimize(loss)
     
-    session.run(tf.variables_initializer(optimizer.variables()))
+    if is_pretrained == True:
+        session.run(tf.variables_initializer(optimizer.variables()))
     return inputs, outputs, labels, loss, train_step
 
 def validate_siamese_model(
@@ -104,6 +105,7 @@ def train_siamese_model(
     session,
     model, 
     batch_loader, 
+    is_pretrained,
     num_iter=100,
     observer=None,
 ):
@@ -118,6 +120,8 @@ def train_siamese_model(
     - batch_loader: Function
         Should take source_path, train_dirs, train_labels, num_per_class as parameters
         and return an iterator [samples, batch_lables]
+    - is_pretrained: bool
+        If the model is pretrained
     - num_iter: int
         Number of iterations
     - observer: EventAggregator
@@ -127,6 +131,8 @@ def train_siamese_model(
     """
     
     inputs, outputs, labels, loss, train_step = model
+    if is_pretrained == False:
+        session.run(tf.global_variables_initializer())
     
     for i in range(num_iter):
         samples, batch_labels = batch_loader()
