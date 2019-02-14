@@ -10,7 +10,8 @@ python jobs.py \
     --loss=triplet_semihard \
     --metric=cosine \
     --margin=0.5 \
-    --lr=1e-3
+    --lr=1e-3 \
+    --log_every=5 \
 
 # python jobs.py \
 #     --job_name=classifier \

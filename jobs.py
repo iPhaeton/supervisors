@@ -65,6 +65,7 @@ def siamese_job(source_path, model_loader, **kwargs):
     lr = kwargs.pop('lr', 1e-3)
     observer = kwargs.pop('observer', None)
     is_pretrained = kwargs.pop('is_pretrained', None)
+    log_every = kwargs.pop('log_every', None)
     
     tf.reset_default_graph()
 
@@ -97,7 +98,7 @@ def siamese_job(source_path, model_loader, **kwargs):
         num_iter=num_iter,
         observer=observer,
         log_dir=LOG_DIR_PATH,
-        log_every=5,
+        log_every=log_every,
         is_pretrained=is_pretrained,
     )
 
@@ -168,16 +169,25 @@ def parse_args():
         "--model_name",
         default=None,
         help="Model name",
+        type=str
     )
     parser.add_argument(
         "--loss",
         default=None,
         help="Name of loass function",
+        type=str
     )
     parser.add_argument(
         "--data",
         default=None,
         help="Data name",
+        type=str
+    )
+    parser.add_argument(
+        "--log_every",
+        default=5,
+        help="Number of iterations between logs",
+        type=int
     )
     return parser.parse_args()
 
@@ -242,6 +252,7 @@ def main():
             margin=args.margin,
             lr=args.lr,
             observer=observer,
+            log_every=args.log_every
         )
 
 if __name__ == '__main__':
