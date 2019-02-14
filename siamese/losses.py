@@ -5,37 +5,37 @@ from tensorflow.python.ops import math_ops
 from tensorflow.python.framework import dtypes
 
 def masked_maximum(data, mask, dim=1):
-    """Computes the axis wise maximum over chosen elements.
-    Args:
-        data: 2-D float `Tensor` of size [n, m].
-        mask: 2-D Boolean `Tensor` of size [n, m].
-        dim: The dimension over which to compute the maximum.
-    Returns:
-        masked_maximums: N-D `Tensor`.
-        The maximized dimension is of size 1 after the operation.
-    """
-    axis_minimums = math_ops.reduce_min(data, dim, keepdims=True)
-    masked_maximums = math_ops.reduce_max(
-        math_ops.multiply(data - axis_minimums, mask), dim,
-        keepdims=True) + axis_minimums
-    return masked_maximums
+  """Computes the axis wise maximum over chosen elements.
+  Args:
+    data: 2-D float `Tensor` of size [n, m].
+    mask: 2-D Boolean `Tensor` of size [n, m].
+    dim: The dimension over which to compute the maximum.
+  Returns:
+    masked_maximums: N-D `Tensor`.
+      The maximized dimension is of size 1 after the operation.
+  """
+  axis_minimums = math_ops.reduce_min(data, dim, keepdims=True)
+  masked_maximums = math_ops.reduce_max(
+      math_ops.multiply(data - axis_minimums, mask), dim,
+      keepdims=True) + axis_minimums
+  return masked_maximums
 
 
 def masked_minimum(data, mask, dim=1):
-    """Computes the axis wise minimum over chosen elements.
-    Args:
-        data: 2-D float `Tensor` of size [n, m].
-        mask: 2-D Boolean `Tensor` of size [n, m].
-        dim: The dimension over which to compute the minimum.
-    Returns:
-        masked_minimums: N-D `Tensor`.
-        The minimized dimension is of size 1 after the operation.
-    """
-    axis_maximums = math_ops.reduce_max(data, dim, keepdims=True)
-    masked_minimums = math_ops.reduce_min(
-        math_ops.multiply(data - axis_maximums, mask), dim,
-        keepdims=True) + axis_maximums
-    return masked_minimums
+  """Computes the axis wise minimum over chosen elements.
+  Args:
+    data: 2-D float `Tensor` of size [n, m].
+    mask: 2-D Boolean `Tensor` of size [n, m].
+    dim: The dimension over which to compute the minimum.
+  Returns:
+    masked_minimums: N-D `Tensor`.
+      The minimized dimension is of size 1 after the operation.
+  """
+  axis_maximums = math_ops.reduce_max(data, dim, keepdims=True)
+  masked_minimums = math_ops.reduce_min(
+      math_ops.multiply(data - axis_maximums, mask), dim,
+      keepdims=True) + axis_maximums
+  return masked_minimums
 
 def triplet_semihard_loss(labels, embeddings, metric, margin=1.0):
     """Computes the triplet loss with semi-hard negative mining.

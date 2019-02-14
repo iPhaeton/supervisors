@@ -4,7 +4,6 @@ import sys
 sys.path.append("..")
 from decorators import with_tensorboard
 from constants import ON_ITER_START, ON_ITER_END
-from siamese.triplet_loss import triplet_semihard_loss
 
 def create_graph(session, base_model, optimizer, loss_fn):
     """

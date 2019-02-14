@@ -6,7 +6,7 @@ python jobs.py \
     --batch_size=30 \
     --num_iter=100 \
     --num_per_class=4 \
-    --loss=triplet \
+    --loss=triplet_semihard \
     --metric=eucledian \
     --margin=0.5 \
     --lr=1e-3

@@ -7,8 +7,9 @@ from sklearn.model_selection import train_test_split
 from loaders.data import load_CIFAR10_data
 from loaders.batch import load_batch_of_images, cv2_loader, pil_loader, load_batch_of_data
 from loaders.models import load_deep_sort_cnn, load_simple_model, load_simpler_model,load_complex_model
-from utils.metrics import cosine_distance, pairwise_distance
+from utils.metrics import cosine_distance, eucledian_distance
 from siamese.supervisor import train_siamese_model, create_graph as create_siamese_graph
+from siamese.losses import triplet_semihard_loss
 from classifier.supervisor import train_classifier, create_graph as create_classification_graph
 from classifier.losses import compute_hinge_loss, compute_softmax_loss
 import argparse
@@ -189,13 +190,19 @@ def main():
             checkpoint_path=os.path.join(args.model_path, 'mars-small128.ckpt-68577')
         )
 
+    #get metric
+    if args.metric == 'eucledian':
+        metric = partial(eucledian_distance, squared=True)
+    elif args.metric == 'cosine':
+        metric = cosine_distance
+
     #get loss function
     if args.loss == 'hinge':
         loss_fn = compute_hinge_loss
     elif args.loss == 'softmax':
         loss_fn = compute_softmax_loss
-    elif args.loss == 'triplet':
-        loss_fn = partial(tf.contrib.losses.metric_learning.triplet_semihard_loss, margin=args.margin)
+    elif args.loss == 'triplet_semihard':
+        loss_fn = partial(triplet_semihard_loss, metric=eucledian_distance, margin=args.margin)
 
     #get data loader
     if args.data == 'cifar10':

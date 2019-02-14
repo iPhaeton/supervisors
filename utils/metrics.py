@@ -25,7 +25,7 @@ def cosine_distance(embeddings):
         tf.matmul(normalized_embeddings, tf.transpose(normalized_embeddings))
     )
 
-def pairwise_distance(feature, squared=False):
+def eucledian_distance(feature, squared=False):
     """Computes the pairwise distance matrix with numerical stability.
     output[i, j] = || feature[i, :] - feature[j, :] ||_2
     Args:
