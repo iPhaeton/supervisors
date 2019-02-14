@@ -91,17 +91,16 @@ def siamese_job(source_path, model_path, **kwargs):
     train_siamese_model(
         session=session,
         model=model,
-        source_path=source_path,
-        dirs=(dirs[0:30], []),
-        class_labels=(labels[0:30], []),
-        metric=cosine_distance,
-        batch_loader=load_batch_of_images(image_shape=(128, 64, 3), loader=cv2_loader),
-        margin=margin,
+        batch_loader=load_batch_of_images(
+            path=source_path, 
+            path_dirs=dirs[0:30], 
+            labels=labels[0:30], 
+            num_per_class=num_per_class, 
+            batch_size=None,
+            image_shape=(128, 64, 3), 
+            loader=cv2_loader,
+        ),
         num_iter=num_iter,
-        num_per_class=num_per_class,
-        batch_size=batch_size,
-        log_dir=LOG_DIR_PATH,
-        log_every=5,
         observer=observer,
     )
 

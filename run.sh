@@ -6,7 +6,7 @@ python jobs.py \
     --batch_size=30 \
     --num_iter=100 \
     --num_per_class=4 \
-    --margin=0.2 \
+    --margin=0.5 \
     --lr=1e-3
 
 # python jobs.py \

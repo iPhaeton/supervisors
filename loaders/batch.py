@@ -17,7 +17,7 @@ def cv2_loader(path, image_shape):
     return np.array(img)
 
 @partially_applied
-def load_batch_of_images(path, path_dirs, labels, num_per_class, batch_size=None, **kwargs):
+def load_batch_of_images(path, path_dirs, labels, num_per_class, image_shape, loader, batch_size=None):
     """
     Loads a random batch of images
     
@@ -34,9 +34,6 @@ def load_batch_of_images(path, path_dirs, labels, num_per_class, batch_size=None
         Number of images randomly chosen from each class
     - batch_size: int
         Number of classes to use in a single batch. Total number of samples will be batch_size * num_per_class
-
-    Keyword arguments:
-    ------------------
     - image_shape: tuple (H,W,C)
         H - image height
         W - image width
@@ -56,9 +53,6 @@ def load_batch_of_images(path, path_dirs, labels, num_per_class, batch_size=None
     - batch_labels: [int]
         Sample labels.
     """
-
-    image_shape = kwargs.pop('image_shape', None)
-    loader = kwargs.pop('loader', cv2_loader)
 
     dirs = np.random.choice(path_dirs, batch_size) if batch_size != None else path_dirs
     

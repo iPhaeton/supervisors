@@ -120,15 +120,8 @@ def validate_siamese_model(
 def train_siamese_model(
     session,
     model, 
-    source_path, 
-    dirs, 
-    class_labels, 
-    metric, 
-    batch_loader,
-    margin=0.2, 
-    num_per_class=5, 
+    batch_loader, 
     num_iter=100,
-    batch_size=None,
     observer=None,
 ):
     """
@@ -139,37 +132,21 @@ def train_siamese_model(
     - session: Tensorflow Session instance.
     - model: tuple
         Sould contain tensors (inputs, outputs, labels, loss, train_step), described in create_graph function.
-    - source_path: string
-        Path to model data.
-    - dirs: [[string], [string]]
-        Lists of training and validation directories.
-    - class_labels: [[int], [int]]
-        Lists of training and validation class labels.
-    - metric: Function
-        Should take output tensor as a parameter and compute distance matrix between outputs.
     - batch_loader: Function
         Should take source_path, train_dirs, train_labels, num_per_class as parameters
         and return an iterator [samples, batch_lables]
-    - margin: float
-        Desired margin between negative and positive samples.
-    - num_per_class: int
-        Number of samples randomly chosen from each class
     - num_iter: int
         Number of iterations
-    - batch_size: int
-        Number of classes to use in a single batch. Total number of samples will be batch_size * num_per_class
     - observer: EventAggregator
     Returns:
     --------
     None
     """
     
-    train_dirs, val_dirs = dirs
-    train_labels, val_labels = class_labels
     inputs, outputs, labels, loss, train_step = model
     
     for i in range(num_iter):
-        samples, batch_labels = batch_loader(source_path, train_dirs, train_labels, num_per_class, None)
+        samples, batch_labels = batch_loader()
         feed_dict = {
             inputs: samples,
             labels: batch_labels,
