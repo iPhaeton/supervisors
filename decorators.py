@@ -42,11 +42,12 @@ def with_tensorboard(func):
 
 def with_validator(func):
     def wrapper(*args, **kwargs):
+        validate_every = kwargs.pop('validate_every', None)
         val_batch_loader = kwargs.pop('val_batch_loader', None)
         observer = kwargs.get('observer', None)
 
         def validate(i, model, validation_summary):
-            if i % 5 != 0:
+            if i % validate_every != 0:
                 return
 
             inputs, labels = model

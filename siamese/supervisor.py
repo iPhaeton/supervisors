@@ -149,12 +149,6 @@ def train_siamese_model(
             observer.emit(ON_LOG, i, feed_dict, [training_summary])
             observer.emit(ON_VALIDATION, i, [inputs, labels], validation_summary)
 
-            # val_samples, val_batch_labels = val_batch_loader()
-            # observer.emit(ON_LOG, i, {
-            #     inputs: val_samples,
-            #     labels: val_batch_labels,
-            # }, [validation_summary])
-
         batch_loss, _ = session.run([loss, train_step], feed_dict)
 
         if observer != None:

@@ -203,6 +203,12 @@ def parse_args():
         help="Directory to save checkpoints",
         type=str
     )
+    parser.add_argument(
+        "--validate_every",
+        default=5,
+        help="Number of iterations between validations",
+        type=int
+    )
     return parser.parse_args()
 
 def main():
@@ -268,6 +274,7 @@ def main():
             log_every=args.log_every,
             save_every=args.save_every,
             save_dir=args.save_dir,
+            validate_every=args.validate_every
         )
 
 if __name__ == '__main__':
