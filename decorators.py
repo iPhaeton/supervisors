@@ -47,6 +47,8 @@ def with_saver(func):
         def save(i, _):
             if (i % save_every == 0) & (i != 0):
                 print('Saving...')
+                if os.path.exists(save_dir) == False:
+                    os.mkdir(save_dir)
                 saver.save(session, os.path.join(save_dir, f'iteration-{i}.ckpt'))
 
         if observer != None:
