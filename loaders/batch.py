@@ -63,7 +63,7 @@ def load_batch_of_images(path, dirs, labels, image_shape, loader, num_per_class,
 
     # Either random = True or batch_size is specified or start_idx and end_idx are specified
     dirs = np.array(dirs)
-
+    
     if batch_size == None:
         batch_dirs = dirs
     elif random == True:
@@ -79,7 +79,8 @@ def load_batch_of_images(path, dirs, labels, image_shape, loader, num_per_class,
     for i, dir_name in enumerate(batch_dirs):
         dir_path = os.path.join(path, dir_name)
         filenames = os.listdir(dir_path)
-        filenames = np.random.choice(filenames, num_per_class)
+        #filenames = np.random.choice(filenames, num_per_class)
+        filenames = filenames[0:12]
             
         batch = np.zeros((num_per_class, *image_shape))
 

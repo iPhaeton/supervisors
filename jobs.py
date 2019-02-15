@@ -73,10 +73,10 @@ def siamese_job(source_path, model_loader, **kwargs):
     train_dirs, val_dirs, train_labels, val_labels = train_test_split(dirs, labels, test_size=0.1)
 
     # Uncomment for local testing
-    # train_dirs = train_dirs[0:25]
-    # train_labels = train_labels[0:25]
-    # val_dirs = val_dirs[0:10]
-    # val_labels = val_labels[0:10]
+    train_dirs = train_dirs[0:25]
+    train_labels = train_labels[0:25]
+    val_dirs = val_dirs[0:10]
+    val_labels = val_labels[0:10]
     #############################
 
     session = tf.Session()
@@ -90,15 +90,24 @@ def siamese_job(source_path, model_loader, **kwargs):
         model=model,
         dirs=[train_dirs, val_dirs],
         labels=[train_labels, val_labels],
-        batch_generator=batch_of_images_generator(
+        # batch_generator=batch_of_images_generator(
+        #     path=source_path, 
+        #     dirs=train_dirs, 
+        #     labels=train_labels, 
+        #     num_per_class=num_per_class, 
+        #     batch_size=batch_size,
+        #     image_shape=(128, 64, 3), 
+        #     loader=cv2_loader,
+        #     shuffle=True,
+        # ),
+        batch_generator=partial(load_batch_of_images,
             path=source_path, 
             dirs=train_dirs, 
             labels=train_labels, 
             num_per_class=num_per_class, 
-            batch_size=batch_size,
+            batch_size=None,
             image_shape=(128, 64, 3), 
             loader=cv2_loader,
-            shuffle=True,
         ),
         batch_loader = partial(load_batch_of_images,
             path=source_path, 

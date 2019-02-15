@@ -160,22 +160,35 @@ def train_siamese_model(
         session.run(tf.global_variables_initializer())
     
     for i in range(epochs):
-        for j, samples, batch_labels in batch_generator:
-            feed_dict = {
-                inputs: samples,
-                labels: batch_labels,
-            }
+        # for j, samples, batch_labels in batch_generator:
+        #     feed_dict = {
+        #         inputs: samples,
+        #         labels: batch_labels,
+        #     }
 
-            batch_loss, _ = session.run([loss, train_step], feed_dict)
+        #     batch_loss, _ = session.run([loss, train_step], feed_dict)
 
-            print(f'Epoch {i}. Iteration {j}. Batch loss: {batch_loss}')
+        #     print(f'Epoch {i}. Iteration {j}. Batch loss: {batch_loss}')
             
-            if j == -1:
-                break
+        #     if j == -1:
+        #         break
+
+        ##########################################
+        samples, batch_labels = batch_generator()
+
+        feed_dict = {
+            inputs: samples,
+            labels: batch_labels,
+        }
+
+        batch_loss, _ = session.run([loss, train_step], feed_dict)
+
+        print(f'Epoch {i}. Batch loss: {batch_loss}')
+        ##########################################
 
         if (observer != None) & (i % log_every == 0):
             print('Calculating training loss...')
-            log_samples, log_lables = batch_loader(dirs=train_dirs, labels=train_labels, random=True, batch_size=batch_size)
+            log_samples, log_lables = batch_loader(dirs=train_dirs, labels=train_labels, random=True, batch_size=None)
             observer.emit(ON_LOG, i, {
                 inputs: log_samples,
                 labels: log_lables,
