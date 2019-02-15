@@ -24,7 +24,6 @@ def with_tensorboard(func):
             merged_summary = tf.summary.merge_all()
 
             def log_summary(i, feed_dict, summaries):
-                print('Logging summary...')
                 summaries.append(merged_summary)
                 calculated_summaries = session.run(summaries, feed_dict)
                 for s in calculated_summaries:
