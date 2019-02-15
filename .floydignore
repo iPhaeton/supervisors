@@ -12,3 +12,6 @@ var
 *.pyc
 *.swp
 .DS_Store
+
+/log*
+checkpoints/
