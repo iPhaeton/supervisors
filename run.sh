@@ -4,8 +4,8 @@ python jobs.py \
     --source_path=../input/mars/bbox_train/ \
     --model_path=../input/models/deep_sort_cnn/freeze_model.py \
     --checkpoint_path=../input/models/deep_sort_cnn/mars-small128.ckpt-68577 \
-    --batch_size=30 \
-    --num_iter=100 \
+    --batch_size=10 \
+    --epochs=11 \
     --num_per_class=4 \
     --loss=triplet_semihard \
     --metric=cosine \

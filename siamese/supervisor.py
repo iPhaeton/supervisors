@@ -102,14 +102,15 @@ def validate_siamese_model(
 
 @with_saver
 @with_tensorboard
-@with_validator
+#@with_validator
 def train_siamese_model(
     session,
     model, 
     batch_loader, 
     is_pretrained,
-    num_iter=100,
+    epochs=100,
     observer=None,
+    **kwargs,
 ):
     """
     Trains a siamese model
@@ -124,8 +125,8 @@ def train_siamese_model(
         and return an iterator [samples, batch_lables]
     - is_pretrained: bool
         If the model is pretrained
-    - num_iter: int
-        Number of iterations
+    - epochs: int
+        Number of epochs.
     - observer: EventAggregator
     Returns:
     --------
@@ -138,20 +139,24 @@ def train_siamese_model(
     if is_pretrained == False:
         session.run(tf.global_variables_initializer())
     
-    for i in range(num_iter):
-        samples, batch_labels = batch_loader()
-        feed_dict = {
-            inputs: samples,
-            labels: batch_labels,
-        }
+    for i in range(epochs):
+        for j, samples, batch_labels in batch_loader:
+            feed_dict = {
+                inputs: samples,
+                labels: batch_labels,
+            }
 
-        if observer != None:
-            observer.emit(ON_LOG, i, feed_dict, [training_summary])
-            observer.emit(ON_VALIDATION, i, [inputs, labels], validation_summary)
+            if observer != None:
+                observer.emit(ON_LOG, i, feed_dict, [training_summary])
+                observer.emit(ON_VALIDATION, i, [inputs, labels], validation_summary)
 
-        batch_loss, _ = session.run([loss, train_step], feed_dict)
+            batch_loss, _ = session.run([loss, train_step], feed_dict)
 
-        if observer != None:
-            observer.emit(ON_ITER_END, i, feed_dict)
+            if observer != None:
+                observer.emit(ON_ITER_END, i, feed_dict)
 
-        print(f'{{"metric": "Train loss", "value": "{batch_loss}"}}')
+            print(j, f'{{"metric": "Train loss", "value": "{batch_loss}"}}')
+            
+            if j == -1:
+                break
+        

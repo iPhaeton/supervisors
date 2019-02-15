@@ -27,7 +27,7 @@ def train_classifier(
     source_path,
     data_loader,
     batch_loader,
-    num_iter=100,
+    epochs=100,
     batch_size=None,
     observer=None,
 ):
@@ -40,7 +40,7 @@ def train_classifier(
         samples, data_labels, samples_val, labels_val, samples_test, labels_test = data_loader(source_path)
 
     iter_count = 0
-    for i in range(num_iter):
+    for i in range(epochs):
         indices = np.random.permutation(range(samples.shape[0]))
         for j in range(int(math.ceil(samples.shape[0]/batch_size))):
             batch, batch_labels = batch_loader(samples[indices,:,:,:], data_labels[indices], batch_size, j)

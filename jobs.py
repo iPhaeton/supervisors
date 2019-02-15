@@ -5,7 +5,7 @@ from utils.common import classes_to_labels
 import os
 from sklearn.model_selection import train_test_split
 from loaders.data import load_CIFAR10_data
-from loaders.batch import load_batch_of_images, cv2_loader, pil_loader, load_batch_of_data
+from loaders.batch import batch_of_images_generator, cv2_loader, pil_loader, load_batch_of_data
 from loaders.models import load_deep_sort_cnn, load_simple_model, load_simpler_model,load_complex_model
 from utils.metrics import cosine_distance, eucledian_distance
 from siamese.supervisor import train_siamese_model, create_graph as create_siamese_graph
@@ -31,7 +31,7 @@ def classification_job(source_path, **kwargs):
     loss_fn = kwargs.pop('loss_fn', None)
     data_loader = kwargs.pop('data_loader', None)
     batch_size = kwargs.pop('batch_size', None)
-    num_iter = kwargs.pop('num_iter', 100)
+    epochs = kwargs.pop('epochs', 100)
     lr = kwargs.pop('lr', 1e-3)
     observer = kwargs.pop('observer', None)
 
@@ -51,7 +51,7 @@ def classification_job(source_path, **kwargs):
         source_path=source_path,
         data_loader=data_loader,
         batch_loader=load_batch_of_data,
-        num_iter=num_iter,
+        epochs=epochs,
         batch_size=batch_size,
         observer=observer,
     )
@@ -81,24 +81,24 @@ def siamese_job(source_path, model_loader, **kwargs):
     train_siamese_model(
         session=session,
         model=model,
-        batch_loader=load_batch_of_images(
+        batch_loader=batch_of_images_generator(
             path=source_path, 
-            path_dirs=dirs[0:30], 
-            labels=labels[0:30], 
+            dirs=dirs[0:25], 
+            labels=labels[0:25], 
             num_per_class=num_per_class, 
-            batch_size=None,
+            batch_size=batch_size,
             image_shape=(128, 64, 3), 
             loader=cv2_loader,
         ),
-        val_batch_loader=load_batch_of_images(
-            path=source_path, 
-            path_dirs=dirs[30:40], 
-            labels=labels[30:40], 
-            num_per_class=num_per_class, 
-            batch_size=None,
-            image_shape=(128, 64, 3), 
-            loader=cv2_loader,
-        ),
+        # val_batch_loader=load_batch_of_images(
+        #     path=source_path, 
+        #     dirs=dirs[30:40], 
+        #     labels=labels[30:40], 
+        #     num_per_class=num_per_class, 
+        #     batch_size=None,
+        #     image_shape=(128, 64, 3), 
+        #     loader=cv2_loader,
+        # ),
         log_dir=LOG_DIR_PATH,
         is_pretrained=is_pretrained,
         **kwargs,
@@ -138,9 +138,9 @@ def parse_args():
         type=int
     )
     parser.add_argument(
-        "--num_iter",
+        "--epochs",
         default=100,
-        help='Number of iterations',
+        help='Number of epochs',
         type=int
     )
     parser.add_argument(
@@ -257,7 +257,7 @@ def main():
             loss_fn=loss_fn,
             data_loader=data_loader,
             batch_size=args.batch_size,
-            num_iter=args.num_iter,
+            epochs=args.epochs,
             lr=args.lr,
             observer=observer,
         )
@@ -267,7 +267,7 @@ def main():
             model_loader,
             loss_fn=loss_fn,
             batch_size=args.batch_size, 
-            num_iter=args.num_iter,
+            epochs=args.epochs,
             num_per_class=args.num_per_class,
             lr=args.lr,
             observer=observer,
