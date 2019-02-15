@@ -1,4 +1,4 @@
-machine: cpu
+machine: gpu
 mode: job
 env: tensorflow-1.11
 input:
