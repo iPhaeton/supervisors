@@ -11,7 +11,7 @@ python jobs.py \
     --metric=cosine \
     --margin=0.2 \
     --lr=1e-3 \
-    --log_every=5 \
+    --log_every=1 \
     --save_dir=./checkpoints \
-    --save_every=10 \
-    --validate_every=10
+    --save_every=5 \
+    --validate_every=5
