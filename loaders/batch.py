@@ -17,7 +17,7 @@ def cv2_loader(path, image_shape):
     img = cv2.resize(img, (image_shape[1], image_shape[0]))
     return np.array(img)
 
-def load_batch_of_images(path, dirs, labels, image_shape, loader, num_per_class, batch_size=None, random=False, start_idx=None, end_idx=None):
+def load_batch_of_images(path, dirs, labels, image_shape, loader, num_per_class, batch_size=None, random=False, indices=None):
     """
     Loads a random batch of images
     
@@ -62,14 +62,16 @@ def load_batch_of_images(path, dirs, labels, image_shape, loader, num_per_class,
     """
 
     # Either random = True or batch_size is specified or start_idx and end_idx are specified
+    dirs = np.array(dirs)
+
     if batch_size == None:
         batch_dirs = dirs
     elif random == True:
         assert batch_size != None
         batch_dirs = np.random.choice(dirs, batch_size)
     else:
-        assert (batch_size != None) & (start_idx != None) & (end_idx != None)
-        batch_dirs = dirs[start_idx : end_idx]
+        assert (batch_size != None) & (indices is not None)
+        batch_dirs = dirs[indices]
 
     samples = np.zeros((num_per_class * len(batch_dirs), *image_shape))
     batch_labels = np.ones(num_per_class * len(batch_dirs)).astype(int)
@@ -89,7 +91,7 @@ def load_batch_of_images(path, dirs, labels, image_shape, loader, num_per_class,
     
     return samples, batch_labels
 
-def batch_of_images_generator(**kwargs):
+def batch_of_images_generator(shuffle=True, **kwargs):
     """
     Generates batches of images
     
@@ -128,6 +130,10 @@ def batch_of_images_generator(**kwargs):
 
     dirs = kwargs.get('dirs')
     batch_size = kwargs.get('batch_size')
+    if shuffle == True:
+        indices = np.random.permutation(len(dirs))
+    else:
+        indices = range(len(dirs))
 
     iterations_per_epoch = math.ceil(len(dirs) / batch_size)
 
@@ -138,10 +144,13 @@ def batch_of_images_generator(**kwargs):
         start_idx = iter_count * batch_size
         end_idx = min(start_idx + batch_size, len(dirs))
 
+        samples, batch_labels = load_batch_of_images(**kwargs, random=False, indices=indices[start_idx:end_idx])
+        
         if end_idx >= len(dirs):
             iter_count = -1
-
-        samples, batch_labels = load_batch_of_images(**kwargs, random=False, start_idx=start_idx, end_idx=end_idx)
+            if shuffle == True:
+                indices = np.random.permutation(len(dirs))
+        
         yield iter_count, samples, batch_labels
 
 def load_batch_of_data(samples, labels, batch_size, iteration):
