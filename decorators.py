@@ -1,6 +1,6 @@
 import tensorflow as tf
 import shutil
-from constants import ON_ITER_START, ON_ITER_END, ON_LOG, ON_VALIDATION
+from constants import ON_EPOCH_END, ON_LOG
 import os
 
 def partially_applied(func):
@@ -13,7 +13,6 @@ def partially_applied(func):
 def with_tensorboard(func):
     def wrapper(*args, **kwargs):
         log_dir = kwargs.pop('log_dir', None)
-        log_every = kwargs.pop('log_every', 5)
         session = kwargs.get('session')
         observer = kwargs.get('observer', None)
 
@@ -25,9 +24,7 @@ def with_tensorboard(func):
             merged_summary = tf.summary.merge_all()
 
             def log_summary(i, feed_dict, summaries):
-                if i % log_every != 0:
-                    return
-                
+                print('Logging summary...')
                 summaries.append(merged_summary)
                 calculated_summaries = session.run(summaries, feed_dict)
                 for s in calculated_summaries:
@@ -40,31 +37,6 @@ def with_tensorboard(func):
     
     return wrapper
 
-def with_validator(func):
-    def wrapper(*args, **kwargs):
-        validate_every = kwargs.pop('validate_every', None)
-        val_batch_loader = kwargs.pop('val_batch_loader', None)
-        observer = kwargs.get('observer', None)
-
-        def validate(i, model, validation_summary):
-            if i % validate_every != 0:
-                return
-
-            inputs, labels = model
-            val_samples, val_batch_labels = val_batch_loader()
-            observer.emit(ON_LOG, i, {
-                inputs: val_samples,
-                labels: val_batch_labels,
-            }, [validation_summary])
-
-        if observer != None:
-            observer.add_listener(ON_VALIDATION, validate)
-        
-        return func(*args, **kwargs)
-    
-    return wrapper
-
-
 def with_saver(func):
     def wrapper(*args, **kwargs):
         saver = tf.train.Saver()
@@ -75,10 +47,11 @@ def with_saver(func):
 
         def save(i, _):
             if (i % save_every == 0) & (i != 0):
+                print('Saving...')
                 saver.save(session, os.path.join(save_dir, f'iteration-{i}.ckpt'))
 
         if observer != None:
-            observer.add_listener(ON_ITER_END, save)
+            observer.add_listener(ON_EPOCH_END, save)
 
         return func(*args, **kwargs)
 

@@ -5,7 +5,7 @@ from utils.common import classes_to_labels
 import os
 from sklearn.model_selection import train_test_split
 from loaders.data import load_CIFAR10_data
-from loaders.batch import batch_of_images_generator, cv2_loader, pil_loader, load_batch_of_data
+from loaders.batch import batch_of_images_generator, load_batch_of_images, cv2_loader, pil_loader, load_batch_of_data
 from loaders.models import load_deep_sort_cnn, load_simple_model, load_simpler_model,load_complex_model
 from utils.metrics import cosine_distance, eucledian_distance
 from siamese.supervisor import train_siamese_model, create_graph as create_siamese_graph
@@ -70,7 +70,14 @@ def siamese_job(source_path, model_loader, **kwargs):
     )(source_path)
 
     labels = classes_to_labels(dirs)
-    #train_dirs, val_dirs, train_labels, val_labels = train_test_split(dirs, labels, test_size=0.1)
+    train_dirs, val_dirs, train_labels, val_labels = train_test_split(dirs, labels, test_size=0.1)
+
+    # Uncomment for local testing
+    train_dirs = train_dirs[0:25]
+    train_labels = train_labels[0:25]
+    val_dirs = val_dirs[0:10]
+    val_labels = val_labels[0:10]
+    #############################
 
     session = tf.Session()
     inputs, outputs, is_pretrained = model_loader(session)
@@ -81,26 +88,26 @@ def siamese_job(source_path, model_loader, **kwargs):
     train_siamese_model(
         session=session,
         model=model,
-        batch_loader=batch_of_images_generator(
+        dirs=[train_dirs, val_dirs],
+        labels=[train_labels, val_labels],
+        batch_generator=batch_of_images_generator(
             path=source_path, 
-            dirs=dirs[0:25], 
-            labels=labels[0:25], 
+            dirs=train_dirs, 
+            labels=train_labels, 
             num_per_class=num_per_class, 
             batch_size=batch_size,
             image_shape=(128, 64, 3), 
             loader=cv2_loader,
         ),
-        # val_batch_loader=load_batch_of_images(
-        #     path=source_path, 
-        #     dirs=dirs[30:40], 
-        #     labels=labels[30:40], 
-        #     num_per_class=num_per_class, 
-        #     batch_size=None,
-        #     image_shape=(128, 64, 3), 
-        #     loader=cv2_loader,
-        # ),
+        batch_loader = partial(load_batch_of_images,
+            path=source_path, 
+            num_per_class=num_per_class, 
+            image_shape=(128, 64, 3), 
+            loader=cv2_loader,
+        ),
         log_dir=LOG_DIR_PATH,
         is_pretrained=is_pretrained,
+        batch_size=batch_size,
         **kwargs,
     )
 

@@ -2,8 +2,8 @@ import tensorflow as tf
 
 import sys
 sys.path.append("..")
-from decorators import with_tensorboard, with_saver, with_validator
-from constants import ON_ITER_START, ON_ITER_END, ON_LOG, ON_VALIDATION
+from decorators import with_tensorboard, with_saver
+from constants import ON_EPOCH_END, ON_LOG
 
 def create_graph(session, base_model, optimizer, loss_fn, is_pretrained):
     """
@@ -102,14 +102,19 @@ def validate_siamese_model(
 
 @with_saver
 @with_tensorboard
-#@with_validator
 def train_siamese_model(
     session,
     model, 
+    dirs,
+    labels,
+    batch_generator,
     batch_loader, 
     is_pretrained,
     epochs=100,
     observer=None,
+    log_every=5,
+    validate_every=5,
+    batch_size=None,
     **kwargs,
 ):
     """
@@ -119,19 +124,34 @@ def train_siamese_model(
     -----------
     - session: Tensorflow Session instance.
     - model: tuple
-        Sould contain tensors (inputs, outputs, labels, loss, train_step), described in create_graph function.
+        Should contain tensors (inputs, outputs, labels, loss, train_step), described in create_graph function.
+    - dirs: [[str]]
+        List of training and validation directories [train_dirs, val_dirs]
+    - labels: [[number]]
+        List of training and class_labels [train_labels, val_labels]
+    - batch_generator: iterator
+        Sould yield [iteration, samples, batch_lables]. For the last batch in an epoch iteration == -1.
     - batch_loader: Function
-        Should take source_path, train_dirs, train_labels, num_per_class as parameters
+        Should take dirs, labels, batch_size, random as parameters
         and return an iterator [samples, batch_lables]
     - is_pretrained: bool
         If the model is pretrained
     - epochs: int
         Number of epochs.
     - observer: EventAggregator
+    - log_every: int
+        Number of iterations between logs.
+    - validate_every: int
+        Number of iterations between validations.
+    - batch_size: int
+        Number of classes to use in a single batch.
     Returns:
     --------
     None
     """
+
+    train_dirs, val_dirs = dirs
+    train_labels, val_labels = labels
     
     inputs, outputs, labels, loss, train_step = model
     training_summary = tf.summary.scalar("training_loss", loss)
@@ -140,23 +160,33 @@ def train_siamese_model(
         session.run(tf.global_variables_initializer())
     
     for i in range(epochs):
-        for j, samples, batch_labels in batch_loader:
+        for j, samples, batch_labels in batch_generator:
             feed_dict = {
                 inputs: samples,
                 labels: batch_labels,
             }
 
-            if observer != None:
-                observer.emit(ON_LOG, i, feed_dict, [training_summary])
-                observer.emit(ON_VALIDATION, i, [inputs, labels], validation_summary)
-
             batch_loss, _ = session.run([loss, train_step], feed_dict)
 
-            if observer != None:
-                observer.emit(ON_ITER_END, i, feed_dict)
-
-            print(j, f'{{"metric": "Train loss", "value": "{batch_loss}"}}')
+            print(f'Iteration {j}. Batch loss: {batch_loss}')
             
             if j == -1:
                 break
+
+        if (observer != None) & (i % log_every == 0):
+            log_samples, log_lables = batch_loader(dirs=train_dirs, labels=train_labels, random=True, batch_size=batch_size)
+            observer.emit(ON_LOG, i, {
+                inputs: log_samples,
+                labels: log_lables,
+            }, [training_summary])
+
+        if (observer != None) & (i % validate_every == 0):
+            log_samples, log_lables = batch_loader(dirs=val_dirs, labels=val_labels, random=True, batch_size=None)
+            observer.emit(ON_LOG, i, {
+                inputs: log_samples,
+                labels: log_lables,
+            }, [validation_summary])
+
+        if observer != None:
+            observer.emit(ON_EPOCH_END, i, feed_dict)
         

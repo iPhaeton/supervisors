@@ -2,10 +2,10 @@ class EventAggregator:
     def __init__(self):
         self._listeners = {}
 
-    def emit(self, name, *args):
+    def emit(self, name, *args, **kwargs):
         if name in self._listeners:
             for listener in self._listeners[name]:
-                listener(*args)
+                listener(*args, **kwargs)
     
     def add_listener(self, name, listener):
         if callable(listener) == False:

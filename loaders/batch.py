@@ -62,13 +62,13 @@ def load_batch_of_images(path, dirs, labels, image_shape, loader, num_per_class,
     """
 
     # Either random = True or batch_size is specified or start_idx and end_idx are specified
-    assert ((random == False) & (batch_size != None) & (start_idx != None) & (end_idx != None)) | (random == True) | (batch_size == None)
-
     if batch_size == None:
         batch_dirs = dirs
     elif random == True:
+        assert batch_size != None
         batch_dirs = np.random.choice(dirs, batch_size)
     else:
+        assert (batch_size != None) & (start_idx != None) & (end_idx != None)
         batch_dirs = dirs[start_idx : end_idx]
 
     samples = np.zeros((num_per_class * len(batch_dirs), *image_shape))
