@@ -4,6 +4,8 @@ from tensorflow.python.ops import array_ops
 from tensorflow.python.ops import math_ops
 from tensorflow.python.framework import dtypes
 from utils.metrics import l2_normalized
+from pyramda import compose
+from utils.curried_functions import tf_multiply, tf_cast, tf_equal
 
 def masked_maximum(data, mask, dim=1):
   """Computes the axis wise maximum over chosen elements.
@@ -113,4 +115,32 @@ def triplet_semihard_loss(labels, embeddings, metric, margin=1.0):
         num_positives,
         name='triplet_semihard_loss')
 
-    return triplet_loss
+    positive_mean_distance, negative_mean_distance = mean_distances(embeddings, labels, metric)
+
+    return triplet_loss, positive_mean_distance, negative_mean_distance
+
+def mean_distances(embeddings, labels, metric):
+    pdist_matrix = metric(l2_normalized(embeddings))
+    adjacency = compose(
+        tf_equal(labels),
+        array_ops.transpose,
+    )(labels)
+    
+    adjacency_not = compose(
+        tf_cast(dtype=dtypes.float32),
+        math_ops.logical_not,
+    )(adjacency)
+
+    adjacency = math_ops.cast(adjacency, dtype=dtypes.float32)
+
+    positive_mean_distance = compose(
+        math_ops.reduce_mean,
+        tf_multiply(adjacency),
+    )(pdist_matrix)
+
+    negative_mean_distance = compose(
+        math_ops.reduce_mean,
+        tf_multiply(adjacency_not),
+    )(pdist_matrix)
+
+    return positive_mean_distance, negative_mean_distance
