@@ -4,6 +4,7 @@ import sys
 sys.path.append("..")
 from decorators import with_tensorboard, with_saver
 from constants import ON_EPOCH_END, ON_LOG
+from siamese.losses import mean_distances
 
 def create_graph(session, base_model, optimizer, loss_fn, is_pretrained):
     """
@@ -37,15 +38,14 @@ def create_graph(session, base_model, optimizer, loss_fn, is_pretrained):
     
     with tf.name_scope('loss'):
         labels = tf.placeholder(name='labels', dtype=tf.int32, shape=(None,))
-        loss = loss_fn(labels=labels, embeddings=outputs)
-        #tf.summary.scalar('loss', loss)
+        loss, positive_mean_distance, negative_mean_distance = loss_fn(labels=labels, embeddings=outputs)
     
     with tf.name_scope('train_step'):
         train_step = optimizer.minimize(loss)
     
     if is_pretrained == True:
         session.run(tf.variables_initializer(optimizer.variables()))
-    return inputs, outputs, labels, loss, train_step
+    return inputs, outputs, labels, loss, positive_mean_distance, negative_mean_distance, train_step
 
 def validate_siamese_model(
     session,
@@ -153,9 +153,14 @@ def train_siamese_model(
     train_dirs, val_dirs = dirs
     train_labels, val_labels = labels
     
-    inputs, outputs, labels, loss, train_step = model
-    training_summary = tf.summary.scalar("training_loss", loss)
-    validation_summary = tf.summary.scalar("validation_loss", loss)
+    inputs, outputs, labels, loss, positive_mean_distance, negative_mean_distance, train_step = model
+    training_loss_summary = tf.summary.scalar("training_loss", loss)
+    tarining_positive_mean_distance_summary = tf.summary.scalar('training_positive_mean_distance', positive_mean_distance)
+    tarining_negative_mean_distance_summary = tf.summary.scalar('training_negative_mean_distance', negative_mean_distance)
+    validation_loss_summary = tf.summary.scalar("validation_loss", loss)
+    validation_positive_mean_distance_summary = tf.summary.scalar('validation_positive_mean_distance', positive_mean_distance)
+    validation_negative_mean_distance_summary = tf.summary.scalar('validation_negative_mean_distance', negative_mean_distance)
+
     if is_pretrained == False:
         session.run(tf.global_variables_initializer())
     
@@ -176,18 +181,32 @@ def train_siamese_model(
         if (observer != None) & (i % log_every == 0):
             print('Calculating training loss...')
             log_samples, log_lables = batch_loader(dirs=train_dirs, labels=train_labels, random=True, batch_size=batch_size)
-            observer.emit(ON_LOG, i, {
-                inputs: log_samples,
-                labels: log_lables,
-            }, [training_summary])
+            observer.emit(ON_LOG, i, 
+                {
+                    inputs: log_samples,
+                    labels: log_lables,
+                }, 
+                [
+                    training_loss_summary, 
+                    tarining_positive_mean_distance_summary, 
+                    tarining_negative_mean_distance_summary
+                ],
+            )
 
         if (observer != None) & (i % validate_every == 0):
             print('Validating...')
             log_samples, log_lables = batch_loader(dirs=val_dirs, labels=val_labels, random=True, batch_size=None)
-            observer.emit(ON_LOG, i, {
-                inputs: log_samples,
-                labels: log_lables,
-            }, [validation_summary])
+            observer.emit(ON_LOG, i, 
+                {
+                    inputs: log_samples,
+                    labels: log_lables,
+                }, 
+                [
+                    validation_loss_summary, 
+                    validation_positive_mean_distance_summary, 
+                    validation_negative_mean_distance_summary
+                ],
+            )
 
         if observer != None:
             observer.emit(ON_EPOCH_END, i, feed_dict)
