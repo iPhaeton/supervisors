@@ -14,7 +14,8 @@ python jobs.py \
     --log_every=2 \
     --save_dir=./checkpoints \
     --save_every=5 \
-    --validate_every=2
+    --validate_every=3 \
+    --normalized=1 \
 
 # python jobs.py \
 #     --job_name=classifier \

@@ -217,6 +217,12 @@ def parse_args():
         help="Number of iterations between validations",
         type=int
     )
+    parser.add_argument(
+        "--normalized",
+        default=1,
+        help="Whether embeddings should be normalized before calculating loss",
+        type=int
+    )
     return parser.parse_args()
 
 def main():
@@ -250,7 +256,7 @@ def main():
     elif args.loss == 'softmax':
         loss_fn = compute_softmax_loss
     elif args.loss == 'triplet_semihard':
-        loss_fn = partial(triplet_semihard_loss, metric=metric, margin=args.margin)
+        loss_fn = partial(triplet_semihard_loss, metric=metric, margin=args.margin, normalized=args.normalized == 1)
 
     #get data loader
     if args.data == 'cifar10':

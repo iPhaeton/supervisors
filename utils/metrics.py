@@ -26,6 +26,7 @@ def cosine_distance(embeddings):
         tf.matmul(embeddings, tf.transpose(embeddings))
     )
 
+#### Original implementation: https://github.com/tensorflow/tensorflow/blob/r1.12/tensorflow/contrib/losses/python/metric_learning/metric_loss_ops.py
 def eucledian_distance(feature, squared=False):
     """Computes the pairwise distance matrix with numerical stability.
     output[i, j] = || feature[i, :] - feature[j, :] ||_2

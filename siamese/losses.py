@@ -40,7 +40,7 @@ def masked_minimum(data, mask, dim=1):
       keepdims=True) + axis_maximums
   return masked_minimums
 
-def triplet_semihard_loss(labels, embeddings, metric, margin=1.0):
+def triplet_semihard_loss(labels, embeddings, metric, margin=1.0, normalized=True):
     """Computes the triplet loss with semi-hard negative mining.
     The loss encourages the positive distances (between a pair of embeddings with
     the same labels) to be smaller than the minimum negative distance among
@@ -62,7 +62,10 @@ def triplet_semihard_loss(labels, embeddings, metric, margin=1.0):
     labels = array_ops.reshape(labels, [lshape[0], 1])
 
     # Build pairwise squared distance matrix.
-    pdist_matrix = metric(l2_normalized(embeddings))
+    if normalized == True:
+        embeddings = l2_normalized(embeddings)
+
+    pdist_matrix = metric(embeddings)
     # Build pairwise binary adjacency matrix.
     adjacency = math_ops.equal(labels, array_ops.transpose(labels))
     # Invert so we can select negatives only.
