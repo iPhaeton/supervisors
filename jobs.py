@@ -247,6 +247,8 @@ def main():
 
     #get metric
     if args.metric == 'eucledian':
+        metric = partial(eucledian_distance, squared=False)
+    elif args.metric == 'euclefdian_squared':
         metric = partial(eucledian_distance, squared=True)
     elif args.metric == 'cosine':
         metric = cosine_distance
