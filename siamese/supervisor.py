@@ -4,7 +4,6 @@ import sys
 sys.path.append("..")
 from decorators import with_tensorboard, with_saver
 from constants import ON_EPOCH_END, ON_LOG
-from siamese.losses import mean_distances
 
 def create_graph(session, base_model, optimizer, loss_fn, is_pretrained):
     """
