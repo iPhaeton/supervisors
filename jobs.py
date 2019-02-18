@@ -9,7 +9,7 @@ from loaders.batch import batch_of_images_generator, load_batch_of_images, cv2_l
 from loaders.models import load_deep_sort_cnn, load_simple_model, load_simpler_model,load_complex_model
 from utils.metrics import cosine_distance, eucledian_distance
 from siamese.supervisor import train_siamese_model, create_graph as create_siamese_graph
-from siamese.losses.strategies import triplet_semihard_loss
+from siamese.losses.strategies import triplet_semihard_loss, batch_hard_triplet_loss, batch_all_triplet_loss
 from classifier.supervisor import train_classifier, create_graph as create_classification_graph
 from classifier.losses import compute_hinge_loss, compute_softmax_loss
 import argparse
@@ -258,6 +258,10 @@ def main():
         loss_fn = compute_softmax_loss
     elif args.loss == 'triplet_semihard':
         loss_fn = partial(triplet_semihard_loss, metric=metric, margin=args.margin)
+    elif args.loss == 'triplet_hard':
+        loss_fn = partial(batch_hard_triplet_loss, metric=metric, margin=args.margin)
+    elif args.loss == 'triplet_all':
+        loss_fn = partial(batch_all_triplet_loss, metric=metric, margin=args.margin)
 
     #get data loader
     if args.data == 'cifar10':

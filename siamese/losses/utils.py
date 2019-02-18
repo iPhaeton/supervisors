@@ -4,6 +4,7 @@ from tensorflow.python.framework import dtypes
 from utils.metrics import l2_normalized
 from utils.curried_functions import tf_equal, tf_multiply, tf_cast
 from pyramda import compose
+import tensorflow as tf
 
 #### Original implementation: https://github.com/tensorflow/tensorflow/blob/r1.12/tensorflow/contrib/losses/python/metric_learning/metric_loss_ops.py
 def masked_maximum(data, mask, dim=1):
