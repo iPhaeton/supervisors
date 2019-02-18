@@ -4,8 +4,9 @@ import sys
 sys.path.append("..")
 from decorators import with_tensorboard, with_saver
 from constants import ON_EPOCH_END, ON_LOG
+from utils.metrics import l2_normalized
 
-def create_graph(session, base_model, optimizer, loss_fn, is_pretrained):
+def create_graph(session, base_model, optimizer, loss_fn, is_pretrained, normalized=True):
     """
     Creates graph for a siamese model
     
@@ -17,6 +18,10 @@ def create_graph(session, base_model, optimizer, loss_fn, is_pretrained):
     - optimizer: Tensorflow optimizer instance
     - loss_fn: Function
         Loss function
+    - is_pretrained: bool
+        If the model uses pretrained weights. If it does, only optimizer will be initialized.
+    - normalized: bool
+        Whether embeddings should be normalized before calculating loss.
 
     Returns:
     --------
@@ -37,6 +42,9 @@ def create_graph(session, base_model, optimizer, loss_fn, is_pretrained):
     
     with tf.name_scope('loss'):
         labels = tf.placeholder(name='labels', dtype=tf.int32, shape=(None,))
+        if normalized == True:
+            outputs = l2_normalized(outputs)
+        
         loss, positive_mean_distance, negative_mean_distance = loss_fn(labels=labels, embeddings=outputs)
     
     with tf.name_scope('train_step'):

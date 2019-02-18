@@ -61,6 +61,7 @@ def siamese_job(source_path, model_loader, **kwargs):
     batch_size = kwargs.pop('batch_size', None)
     num_per_class = kwargs.pop('num_per_class', 5)
     lr = kwargs.pop('lr', 1e-3)
+    normalized = kwargs.pop('normalized', True)
     
     tf.reset_default_graph()
 
@@ -83,7 +84,7 @@ def siamese_job(source_path, model_loader, **kwargs):
     inputs, outputs, is_pretrained = model_loader(session)
 
     optimizer = tf.train.AdamOptimizer(learning_rate=lr)
-    model = create_siamese_graph(session=session, base_model=[inputs, outputs], optimizer=optimizer, loss_fn=loss_fn, is_pretrained=is_pretrained)
+    model = create_siamese_graph(session=session, base_model=[inputs, outputs], optimizer=optimizer, loss_fn=loss_fn, is_pretrained=is_pretrained, normalized=normalized)
 
     train_siamese_model(
         session=session,
@@ -256,7 +257,7 @@ def main():
     elif args.loss == 'softmax':
         loss_fn = compute_softmax_loss
     elif args.loss == 'triplet_semihard':
-        loss_fn = partial(triplet_semihard_loss, metric=metric, margin=args.margin, normalized=args.normalized == 1)
+        loss_fn = partial(triplet_semihard_loss, metric=metric, margin=args.margin)
 
     #get data loader
     if args.data == 'cifar10':
@@ -288,7 +289,8 @@ def main():
             log_every=args.log_every,
             save_every=args.save_every,
             save_dir=args.save_dir,
-            validate_every=args.validate_every
+            validate_every=args.validate_every,
+            normalized=args.normalized == 1,
         )
 
 if __name__ == '__main__':
