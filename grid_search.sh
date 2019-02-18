@@ -14,7 +14,7 @@ do
                 --model_path=../input/models/deep_sort_cnn/freeze_model.py \
                 --checkpoint_path=../input/models/deep_sort_cnn/mars-small128.ckpt-68577 \
                 --batch_size=32 \
-                --epochs=10 \
+                --epochs=15 \
                 --num_per_class=12 \
                 --loss=$loss \
                 --metric=$metric \
