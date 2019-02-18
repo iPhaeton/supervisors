@@ -107,7 +107,6 @@ def siamese_job(source_path, model_loader, **kwargs):
             image_shape=(128, 64, 3), 
             loader=cv2_loader,
         ),
-        log_dir=LOG_DIR_PATH,
         is_pretrained=is_pretrained,
         batch_size=batch_size,
         **kwargs,
@@ -199,6 +198,12 @@ def parse_args():
         default=5,
         help="Number of iterations between logs",
         type=int
+    )
+    parser.add_argument(
+        "--log_dir",
+        default=LOG_DIR_PATH,
+        help="Path to the logs directory",
+        type=str
     )
     parser.add_argument(
         "--save_every",
@@ -293,6 +298,7 @@ def main():
             lr=args.lr,
             observer=observer,
             log_every=args.log_every,
+            log_dir=args.log_dir,
             save_every=args.save_every,
             save_dir=args.save_dir,
             validate_every=args.validate_every,
