@@ -16,6 +16,7 @@ import argparse
 from constants import LOG_DIR_PATH
 from auxillaries.events import EventAggregator
 from functools import partial
+from classes.loss_fn import Triplet_loss_fn
 
 def log_args(args):
     print('-----------------------------')
@@ -74,8 +75,8 @@ def siamese_job(source_path, model_loader, **kwargs):
     train_dirs, val_dirs, train_labels, val_labels = train_test_split(dirs, labels, test_size=0.1)
 
     # Uncomment for local testing
-    train_dirs = train_dirs[0:100]
-    train_labels = train_labels[0:100]
+    train_dirs = train_dirs[0:25]
+    train_labels = train_labels[0:25]
     val_dirs = val_dirs[0:10]
     val_labels = val_labels[0:10]
     #############################
@@ -264,11 +265,11 @@ def main():
     elif args.loss == 'softmax':
         loss_fn = compute_softmax_loss
     elif args.loss == 'triplet_semihard':
-        loss_fn = partial(triplet_semihard_loss, metric=metric, margin=args.margin)
+        loss_fn = Triplet_loss_fn(triplet_semihard_loss, metric=metric, margin=args.margin)
     elif args.loss == 'triplet_hard':
-        loss_fn = partial(batch_hard_triplet_loss, metric=metric, margin=args.margin)
+        loss_fn = Triplet_loss_fn(batch_hard_triplet_loss, metric=metric, margin=args.margin)
     elif args.loss == 'triplet_all':
-        loss_fn = partial(batch_all_triplet_loss, metric=metric, margin=args.margin)
+        loss_fn = Triplet_loss_fn(batch_all_triplet_loss, metric=metric, margin=args.margin)
 
     #get data loader
     if args.data == 'cifar10':
