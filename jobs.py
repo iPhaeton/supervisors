@@ -17,6 +17,7 @@ from constants import LOG_DIR_PATH
 from auxillaries.events import EventAggregator
 from functools import partial
 from classes.loss_fn import Triplet_loss_fn
+from global_context import context as ctx
 
 def log_args(args):
     print('-----------------------------')
@@ -83,9 +84,24 @@ def siamese_job(source_path, model_loader, **kwargs):
 
     session = tf.Session()
     inputs, outputs, is_pretrained = model_loader(session)
+    labels = tf.placeholder(name='labels', dtype=tf.int32, shape=(None,))
+
+    eval_samples, eval_labels = load_batch_of_images(
+        path=source_path,
+        num_per_class=4, 
+        image_shape=(128, 64, 3), 
+        loader=cv2_loader,
+        dirs=train_dirs[0:3], 
+        labels=train_labels[0:3], 
+        batch_size=None,
+    )
+    ctx['evaluator'].initialize(session=session, feed_dict={
+        inputs: eval_samples,
+        labels: eval_labels,
+    })
 
     optimizer = tf.train.AdamOptimizer(learning_rate=lr)
-    model = create_siamese_graph(session=session, base_model=[inputs, outputs], optimizer=optimizer, loss_fn=loss_fn, is_pretrained=is_pretrained, normalized=normalized)
+    model = create_siamese_graph(session=session, base_model=[inputs, outputs, labels], optimizer=optimizer, loss_fn=loss_fn, is_pretrained=is_pretrained, normalized=normalized)
 
     train_siamese_model(
         session=session,

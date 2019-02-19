@@ -5,6 +5,8 @@ from utils.metrics import l2_normalized
 from utils.curried_functions import tf_equal, tf_multiply, tf_cast
 from pyramda import compose
 import tensorflow as tf
+from global_context import context as ctx
+evaluate = ctx['evaluator'].evaluate
 
 #### Original implementation: https://github.com/tensorflow/tensorflow/blob/r1.12/tensorflow/contrib/losses/python/metric_learning/metric_loss_ops.py
 def masked_maximum(data, mask, dim=1):
@@ -49,12 +51,13 @@ def mean_distances(embeddings, labels, metric, normalized):
         tf_equal(labels),
         array_ops.transpose,
     )(labels)
+    #print(evaluate(adjacency))
     adjacency_not = compose(
         tf_cast(dtype=dtypes.float32),
         math_ops.logical_not,
     )(adjacency)
     adjacency = math_ops.cast(adjacency, dtype=dtypes.float32)
-
+    
     pdist_matrix = tf.multiply(dist_matrix, adjacency)
     ndist_matrix = tf.multiply(dist_matrix, adjacency_not)
 

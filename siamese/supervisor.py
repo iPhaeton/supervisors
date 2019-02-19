@@ -39,10 +39,9 @@ def create_graph(session, base_model, optimizer, loss_fn, is_pretrained, normali
     """
 
     with tf.name_scope('base_model'):
-        inputs, outputs = base_model
+        inputs, outputs, labels = base_model
     
     with tf.name_scope('loss'):
-        labels = tf.placeholder(name='labels', dtype=tf.int32, shape=(None,))
         if normalized == True:
             outputs = l2_normalized(outputs)
         
