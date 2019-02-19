@@ -7,7 +7,7 @@ python jobs.py \
     --batch_size=10 \
     --epochs=11 \
     --num_per_class=4 \
-    --loss=triplet_all \
+    --loss=triplet_hard \
     --metric=cosine \
     --margin=0.5 \
     --lr=1e-3 \

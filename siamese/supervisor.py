@@ -47,67 +47,20 @@ def create_graph(session, base_model, optimizer, loss_fn, is_pretrained, normali
             outputs = l2_normalized(outputs)
         
         loss = loss_fn(labels=labels, embeddings=outputs)
-        positive_mean_distance, negative_mean_distance = mean_distances(outputs, labels, metric=loss_fn.metric, normalized=normalized)
+        positive_mean_distance, negative_mean_distance, hardest_mean_positive_distance, hardest_mean_negative_distance = mean_distances(outputs, labels, metric=loss_fn.metric, normalized=normalized)
     
     with tf.name_scope('train_step'):
         train_step = optimizer.minimize(loss)
     
     if is_pretrained == True:
         session.run(tf.variables_initializer(optimizer.variables()))
-    return inputs, outputs, labels, loss, positive_mean_distance, negative_mean_distance, train_step
-
-def validate_siamese_model(
-    session,
-    model, 
-    source_path, 
-    val_dirs, 
-    val_labels,
-    metric,
-    margin,
-    batch_loader,
-    num_per_class,
-    batch_size,
-):
-    """
-    Validates a siamese model
     
-    Parameters:
-    -----------
-    - session: Tensorflow Session instance.
-    - model: tuple
-        Sould contain three tensors (inputs, labels, loss).
-    - source_path: string
-        Path to model data.
-    - val_dirs: [string]
-        List of validation directories.
-    - val_labels: [int]
-        List of validation class labels.
-    - metric: Function
-        Should take output tensor as a parameter and compute distance matrix between outputs.
-    - batch_loader: Function
-        Should take source_path, train_dirs, train_labels, num_per_class as parameters
-        and return an iterator [samples, batch_lables]
-    - num_per_class: int
-        Number of samples randomly chosen from each class
-    - batch_size: int
-        Number of classes to use in a single batch. Total number of samples will be batch_size * num_per_class
-    
-    Returns:
-    --------
-    - batch_loss: float
-        Value of the loss function on the validation batch.
-    """
-
-
-    samples, batch_lables = batch_loader(source_path, val_dirs, val_labels, num_per_class, batch_size if (batch_size != None) and (batch_size < len(val_dirs)) else None)
-    inputs, labels, loss = model
-    
-    batch_loss= session.run(loss, {
-        inputs: samples,
-        labels: batch_lables,
-    })
-
-    return batch_loss
+    return inputs, outputs, labels, loss, train_step, [
+        positive_mean_distance, 
+        negative_mean_distance, 
+        hardest_mean_positive_distance, 
+        hardest_mean_negative_distance,
+    ]
 
 @with_saver
 @with_tensorboard
@@ -162,13 +115,15 @@ def train_siamese_model(
     train_dirs, val_dirs = dirs
     train_labels, val_labels = labels
     
-    inputs, outputs, labels, loss, positive_mean_distance, negative_mean_distance, train_step = model
+    inputs, outputs, labels, loss, train_step, summaries = model
+    positive_mean_distance, negative_mean_distance, hardest_mean_positive_distance, hardest_mean_negative_distance = summaries
+    
     training_loss_summary = tf.summary.scalar("training_loss", loss)
     tarining_positive_mean_distance_summary = tf.summary.scalar('training_positive_mean_distance', positive_mean_distance)
     tarining_negative_mean_distance_summary = tf.summary.scalar('training_negative_mean_distance', negative_mean_distance)
+    tarining_hardest_mean_positive_distance_summary = tf.summary.scalar('training_hardest_mean_positive_distance', hardest_mean_positive_distance)
+    tarining_hardest_mean_negative_distance_summary = tf.summary.scalar('training_hardest_mean_negative_distance', hardest_mean_negative_distance)
     validation_loss_summary = tf.summary.scalar("validation_loss", loss)
-    validation_positive_mean_distance_summary = tf.summary.scalar('validation_positive_mean_distance', positive_mean_distance)
-    validation_negative_mean_distance_summary = tf.summary.scalar('validation_negative_mean_distance', negative_mean_distance)
 
     if is_pretrained == False:
         session.run(tf.global_variables_initializer())
@@ -198,7 +153,9 @@ def train_siamese_model(
                 [
                     training_loss_summary, 
                     tarining_positive_mean_distance_summary, 
-                    tarining_negative_mean_distance_summary
+                    tarining_negative_mean_distance_summary,
+                    tarining_hardest_mean_positive_distance_summary,
+                    tarining_hardest_mean_negative_distance_summary,
                 ],
             )
 
@@ -211,9 +168,7 @@ def train_siamese_model(
                     labels: log_lables,
                 }, 
                 [
-                    validation_loss_summary, 
-                    validation_positive_mean_distance_summary, 
-                    validation_negative_mean_distance_summary
+                    validation_loss_summary,
                 ],
             )
 
