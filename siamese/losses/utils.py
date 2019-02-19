@@ -52,7 +52,7 @@ def mean_distances(embeddings, labels, metric, normalized):
         tf_equal(labels),
         array_ops.transpose,
     )(labels)
-    #print(evaluate(adjacency))
+    
     adjacency_not = compose(
         tf_cast(dtype=dtypes.float32),
         math_ops.logical_not,

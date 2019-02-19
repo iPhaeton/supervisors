@@ -6,6 +6,8 @@ from pyramda import compose
 from utils.curried_functions import tf_multiply, tf_cast, tf_equal
 from siamese.losses.utils import masked_maximum, masked_minimum, _get_anchor_negative_triplet_mask, _get_anchor_positive_triplet_mask, _get_triplet_mask
 import tensorflow as tf
+from global_context import context as ctx
+evaluate = ctx['evaluator'].evaluate
 
 #### Original implementation: https://github.com/tensorflow/tensorflow/blob/r1.12/tensorflow/contrib/losses/python/metric_learning/metric_loss_ops.py
 def triplet_semihard_loss(labels, embeddings, metric, margin=1.0):
@@ -149,7 +151,7 @@ def batch_hard_triplet_loss(labels, embeddings, metric, margin):
     """
     # Get the pairwise distance matrix
     pairwise_dist = metric(embeddings)
-
+    #print(evaluate(pairwise_dist, initializer=tf.global_variables_initializer()))
     # For each anchor, get the hardest positive
     # First, we need to get a mask for every valid positive (they should have same label)
     mask_anchor_positive = _get_anchor_positive_triplet_mask(labels)

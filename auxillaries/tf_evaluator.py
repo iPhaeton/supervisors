@@ -10,7 +10,7 @@ class Tf_evaluator:
         self._session = session
         self._feed_dict = feed_dict
 
-    def evaluate(self, tensor, session=None, feed_dict=None):
+    def evaluate(self, tensor, session=None, feed_dict=None, initializer=None):
         if session == None:
             session = self._session
         if feed_dict == None:
@@ -18,6 +18,9 @@ class Tf_evaluator:
 
         if (session == None) | (feed_dict == None):
             raise Exception('[Tf_logger]. Not initialized')
+
+        if initializer != None:
+            session.run(initializer)
 
         res = session.run(tensor, feed_dict)
         return res

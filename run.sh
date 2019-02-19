@@ -3,12 +3,11 @@ python jobs.py \
     --model_name=deep_sort_cnn \
     --source_path=../input/mars/bbox_train/ \
     --model_path=../input/models/deep_sort_cnn/freeze_model.py \
-    --checkpoint_path=../input/models/deep_sort_cnn/mars-small128.ckpt-68577 \
     --batch_size=10 \
     --epochs=11 \
     --num_per_class=4 \
     --loss=triplet_hard \
-    --metric=cosine \
+    --metric=eucledian \
     --margin=0.5 \
     --lr=1e-3 \
     --log_every=2 \
