@@ -9,7 +9,7 @@ from loaders.batch import batch_of_images_generator, load_batch_of_images, cv2_l
 from loaders.models import load_deep_sort_cnn, load_simple_model, load_simpler_model,load_complex_model
 from utils.metrics import cosine_distance, eucledian_distance
 from siamese.supervisor import train_siamese_model, create_graph as create_siamese_graph
-from siamese.losses import triplet_semihard_loss
+from siamese.losses.strategies import triplet_semihard_loss, batch_hard_triplet_loss, batch_all_triplet_loss
 from classifier.supervisor import train_classifier, create_graph as create_classification_graph
 from classifier.losses import compute_hinge_loss, compute_softmax_loss
 import argparse
@@ -61,6 +61,7 @@ def siamese_job(source_path, model_loader, **kwargs):
     batch_size = kwargs.pop('batch_size', None)
     num_per_class = kwargs.pop('num_per_class', 5)
     lr = kwargs.pop('lr', 1e-3)
+    normalized = kwargs.pop('normalized', True)
     
     tf.reset_default_graph()
 
@@ -83,7 +84,7 @@ def siamese_job(source_path, model_loader, **kwargs):
     inputs, outputs, is_pretrained = model_loader(session)
 
     optimizer = tf.train.AdamOptimizer(learning_rate=lr)
-    model = create_siamese_graph(session=session, base_model=[inputs, outputs], optimizer=optimizer, loss_fn=loss_fn, is_pretrained=is_pretrained)
+    model = create_siamese_graph(session=session, base_model=[inputs, outputs], optimizer=optimizer, loss_fn=loss_fn, is_pretrained=is_pretrained, normalized=normalized)
 
     train_siamese_model(
         session=session,
@@ -115,7 +116,6 @@ def siamese_job(source_path, model_loader, **kwargs):
             image_shape=(128, 64, 3), 
             loader=cv2_loader,
         ),
-        log_dir=LOG_DIR_PATH,
         is_pretrained=is_pretrained,
         batch_size=batch_size,
         **kwargs,
@@ -209,6 +209,12 @@ def parse_args():
         type=int
     )
     parser.add_argument(
+        "--log_dir",
+        default=LOG_DIR_PATH,
+        help="Path to the logs directory",
+        type=str
+    )
+    parser.add_argument(
         "--save_every",
         default=5,
         help="Number of iterations between saves",
@@ -224,6 +230,12 @@ def parse_args():
         "--validate_every",
         default=5,
         help="Number of iterations between validations",
+        type=int
+    )
+    parser.add_argument(
+        "--normalized",
+        default=1,
+        help="Whether embeddings should be normalized before calculating loss",
         type=int
     )
     return parser.parse_args()
@@ -249,6 +261,8 @@ def main():
 
     #get metric
     if args.metric == 'eucledian':
+        metric = partial(eucledian_distance, squared=False)
+    elif args.metric == 'euclefdian_squared':
         metric = partial(eucledian_distance, squared=True)
     elif args.metric == 'cosine':
         metric = cosine_distance
@@ -260,6 +274,10 @@ def main():
         loss_fn = compute_softmax_loss
     elif args.loss == 'triplet_semihard':
         loss_fn = partial(triplet_semihard_loss, metric=metric, margin=args.margin)
+    elif args.loss == 'triplet_hard':
+        loss_fn = partial(batch_hard_triplet_loss, metric=metric, margin=args.margin)
+    elif args.loss == 'triplet_all':
+        loss_fn = partial(batch_all_triplet_loss, metric=metric, margin=args.margin)
 
     #get data loader
     if args.data == 'cifar10':
@@ -289,9 +307,11 @@ def main():
             lr=args.lr,
             observer=observer,
             log_every=args.log_every,
+            log_dir=args.log_dir,
             save_every=args.save_every,
             save_dir=args.save_dir,
-            validate_every=args.validate_every
+            validate_every=args.validate_every,
+            normalized=args.normalized == 1,
         )
 
 if __name__ == '__main__':

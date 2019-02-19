@@ -32,5 +32,5 @@ python jobs.py \
     --log_every=1 \
     --save_dir=./checkpoints \
     --save_every=10 \
-    --validate_every=5
-
+    --validate_every=5 \
+    --normalized=0
