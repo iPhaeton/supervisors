@@ -4,7 +4,7 @@ do
     do
         for normalized in 0 1;
             do
-            for lr in 1e-2 1e-3 1e-4;
+            for lr in 1e-3 1e-4 1e-5 1e-6;
             do
                 #floyd
                 python jobs.py \
@@ -23,7 +23,7 @@ do
                 --log_every=1 \
                 --save_dir=./checkpoints \
                 --save_every=1000 \
-                --validate_every=1 \
+                --validate_every=1000 \
                 --normalized=$normalized \
                 --log_dir="./logs/log-${loss}-${metric}-${normalized}-${lr}"
 
