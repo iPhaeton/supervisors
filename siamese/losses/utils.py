@@ -42,6 +42,7 @@ def masked_minimum(data, mask, dim=1):
         keepdims=True) + axis_maximums
     return masked_minimums
 
+#todo: check and fix before using again
 def mean_distances(embeddings, labels, metric, normalized):
     if normalized == True:
         embeddings = l2_normalized(embeddings)
