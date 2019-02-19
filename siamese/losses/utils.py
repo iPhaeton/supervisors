@@ -40,8 +40,11 @@ def masked_minimum(data, mask, dim=1):
         keepdims=True) + axis_maximums
     return masked_minimums
 
-def mean_distances(embeddings, labels, metric):
-    pdist_matrix = metric(l2_normalized(embeddings))
+def mean_distances(embeddings, labels, metric, normalized):
+    if normalized == True:
+        embeddings = l2_normalized(embeddings)
+
+    pdist_matrix = metric(embeddings)
     adjacency = compose(
         tf_equal(labels),
         array_ops.transpose,

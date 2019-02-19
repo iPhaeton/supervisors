@@ -5,6 +5,7 @@ sys.path.append("..")
 from decorators import with_tensorboard, with_saver
 from constants import ON_EPOCH_END, ON_LOG
 from utils.metrics import l2_normalized
+from siamese.losses.utils import mean_distances
 
 def create_graph(session, base_model, optimizer, loss_fn, is_pretrained, normalized=True):
     """
@@ -45,7 +46,8 @@ def create_graph(session, base_model, optimizer, loss_fn, is_pretrained, normali
         if normalized == True:
             outputs = l2_normalized(outputs)
         
-        loss, positive_mean_distance, negative_mean_distance = loss_fn(labels=labels, embeddings=outputs)
+        loss = loss_fn(labels=labels, embeddings=outputs)
+        positive_mean_distance, negative_mean_distance = mean_distances(outputs, labels, metric=loss_fn.metric, normalized=normalized)
     
     with tf.name_scope('train_step'):
         train_step = optimizer.minimize(loss)
