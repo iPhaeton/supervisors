@@ -8,7 +8,7 @@ python jobs.py \
     --epochs=11 \
     --num_per_class=4 \
     --loss=triplet_hard \
-    --metric=eucledian \
+    --metric=cosine \
     --margin=0.5 \
     --lr=1e-3 \
     --log_every=2 \

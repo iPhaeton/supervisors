@@ -2,6 +2,8 @@ import tensorflow as tf
 from tensorflow.python.ops import array_ops
 from tensorflow.python.ops import math_ops
 from tensorflow.python.framework import dtypes
+from functools import partial
+from pyramda import compose
 from global_context import context as ctx
 evaluate = ctx['evaluator'].evaluate
 
@@ -22,11 +24,18 @@ def cosine_distance(embeddings):
         N - number of samples (None)
         E - embedding size
     """
+    embeddings = tf.divide(embeddings, tf.norm(embeddings, axis=1, keep_dims=True))
     
-    return tf.subtract(
-        1.,
-        tf.matmul(embeddings, tf.transpose(embeddings))
-    )
+    diag_mask = compose(
+        tf.abs,
+        partial(tf.add, -1.),
+    )(tf.eye(num_rows=tf.shape(embeddings)[0]))
+    
+    return compose(
+        partial(tf.multiply, diag_mask),
+        partial(tf.subtract, 1.),
+        partial(tf.matmul, embeddings),
+    )(tf.transpose(embeddings))
 
 #### Original implementation: https://github.com/tensorflow/tensorflow/blob/r1.12/tensorflow/contrib/losses/python/metric_learning/metric_loss_ops.py
 def eucledian_distance(feature, squared=False):
