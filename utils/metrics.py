@@ -38,7 +38,6 @@ def eucledian_distance(feature, squared=False):
     Returns:
         pairwise_distances: 2-D Tensor of size [number of data, number of data].
     """
-    #ctx['evaluator'].initialize_session(tf.global_variables_initializer())
     
     pairwise_distances_squared = math_ops.add(
         math_ops.reduce_sum(math_ops.square(feature), axis=[1], keepdims=True),

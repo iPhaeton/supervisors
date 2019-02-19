@@ -46,7 +46,7 @@ def create_graph(session, base_model, optimizer, loss_fn, is_pretrained, normali
             outputs = l2_normalized(outputs)
         
         loss = loss_fn(labels=labels, embeddings=outputs)
-        #positive_mean_distance, negative_mean_distance, hardest_mean_positive_distance, hardest_mean_negative_distance = mean_distances(outputs, labels, metric=loss_fn.metric, normalized=normalized)
+        distance_metrics = mean_distances(outputs, labels, metric=loss_fn.metric, normalized=normalized)
     
     with tf.name_scope('train_step'):
         train_step = optimizer.minimize(loss)
@@ -54,7 +54,7 @@ def create_graph(session, base_model, optimizer, loss_fn, is_pretrained, normali
     if is_pretrained == True:
         session.run(tf.variables_initializer(optimizer.variables()))
     
-    return inputs, outputs, labels, loss, train_step
+    return inputs, outputs, labels, loss, train_step, distance_metrics
 
 @with_saver
 @with_tensorboard
@@ -109,10 +109,18 @@ def train_siamese_model(
     train_dirs, val_dirs = dirs
     train_labels, val_labels = labels
     
-    inputs, outputs, labels, loss, train_step = model
+    inputs, outputs, labels, loss, train_step, distance_metrics = model
+    positive_mean_distance, negative_mean_distance, hardest_mean_positive_distance, hardest_mean_negative_distance = distance_metrics
     
-    training_loss_summary = tf.summary.scalar("training_loss", loss)
-    validation_loss_summary = tf.summary.scalar("validation_loss", loss)
+    with tf.name_scope('training'):
+        training_loss_summary = tf.summary.scalar("loss", loss)
+        training_positive_mean_distance_summary = tf.summary.scalar("positive_mean_distance", positive_mean_distance)
+        training_negative_mean_distance_summary = tf.summary.scalar("negative_mean_distance", negative_mean_distance)
+        training_hardest_mean_positive_distance_summary = tf.summary.scalar("hardest_mean_positive_distance", hardest_mean_positive_distance)
+        training_hardest_mean_negative_distance_summary = tf.summary.scalar("hardest_mean_negative_distance", hardest_mean_negative_distance)
+
+    with tf.name_scope('validation'):
+        validation_loss_summary = tf.summary.scalar("loss", loss)
 
     if is_pretrained == False:
         session.run(tf.global_variables_initializer())
@@ -141,6 +149,10 @@ def train_siamese_model(
                 }, 
                 [
                     training_loss_summary,
+                    training_positive_mean_distance_summary,
+                    training_negative_mean_distance_summary,
+                    training_hardest_mean_positive_distance_summary,
+                    training_hardest_mean_negative_distance_summary,
                 ],
             )
 
