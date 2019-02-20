@@ -11,10 +11,10 @@ python jobs.py \
     --metric=cosine \
     --margin=0.5 \
     --lr=1e-3 \
-    --log_every=2 \
+    --log_every=1 \
     --save_dir=./checkpoints \
-    --save_every=5 \
-    --validate_every=3 \
+    --save_every=500 \
+    --validate_every=1 \
     --normalized=1 \
 
 # python jobs.py \

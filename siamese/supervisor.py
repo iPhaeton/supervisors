@@ -128,6 +128,39 @@ def train_siamese_model(
 
     if is_pretrained == False:
         session.run(tf.global_variables_initializer())
+
+    if observer != None:
+            print('Calculating training loss...')
+            log_samples, log_lables = batch_loader(dirs=train_dirs, labels=train_labels, random=True, batch_size=batch_size)
+            observer.emit(ON_LOG, -1, 
+                {
+                    inputs: log_samples,
+                    labels: log_lables,
+                }, 
+                [
+                    training_loss_summary,
+                    training_positive_mean_distance_summary,
+                    training_negative_mean_distance_summary,
+                    training_hardest_mean_positive_distance_summary,
+                    training_hardest_mean_negative_distance_summary,
+                ],
+            )
+
+            print('Validating...')
+            log_samples, log_lables = batch_loader(dirs=val_dirs, labels=val_labels, random=True, batch_size=None)
+            observer.emit(ON_LOG, -1, 
+                {
+                    inputs: log_samples,
+                    labels: log_lables,
+                }, 
+                [
+                    validation_loss_summary,
+                    validation_positive_mean_distance_summary,
+                    validation_negative_mean_distance_summary,
+                    validation_hardest_mean_positive_distance_summary,
+                    validation_hardest_mean_negative_distance_summary,
+                ],
+            )
     
     for i in range(epochs):
         for j, samples, batch_labels in batch_generator:
