@@ -76,10 +76,10 @@ def siamese_job(source_path, model_loader, **kwargs):
     train_dirs, val_dirs, train_labels, val_labels = train_test_split(dirs, labels, test_size=0.1)
 
     # Uncomment for local testing
-    # train_dirs = train_dirs[0:25]
-    # train_labels = train_labels[0:25]
-    # val_dirs = val_dirs[0:10]
-    # val_labels = val_labels[0:10]
+    train_dirs = train_dirs[0:100]
+    train_labels = train_labels[0:100]
+    val_dirs = val_dirs[0:10]
+    val_labels = val_labels[0:10]
     #############################
 
     session = tf.Session()

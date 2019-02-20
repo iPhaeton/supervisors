@@ -121,6 +121,10 @@ def train_siamese_model(
 
     with tf.name_scope('validation'):
         validation_loss_summary = tf.summary.scalar("loss", loss)
+        validation_positive_mean_distance_summary = tf.summary.scalar("positive_mean_distance", positive_mean_distance)
+        validation_negative_mean_distance_summary = tf.summary.scalar("negative_mean_distance", negative_mean_distance)
+        validation_hardest_mean_positive_distance_summary = tf.summary.scalar("hardest_mean_positive_distance", hardest_mean_positive_distance)
+        validation_hardest_mean_negative_distance_summary = tf.summary.scalar("hardest_mean_negative_distance", hardest_mean_negative_distance)
 
     if is_pretrained == False:
         session.run(tf.global_variables_initializer())
@@ -166,6 +170,10 @@ def train_siamese_model(
                 }, 
                 [
                     validation_loss_summary,
+                    validation_positive_mean_distance_summary,
+                    validation_negative_mean_distance_summary,
+                    validation_hardest_mean_positive_distance_summary,
+                    validation_hardest_mean_negative_distance_summary,
                 ],
             )
 
