@@ -5,6 +5,7 @@ sys.path.append("..")
 from decorators import with_tensorboard, with_saver
 from constants import ON_EPOCH_END, ON_LOG
 from utils.metrics import l2_normalized
+from siamese.losses.utils import mean_distances
 
 def create_graph(session, base_model, optimizer, loss_fn, is_pretrained, normalized=True):
     """
@@ -38,74 +39,22 @@ def create_graph(session, base_model, optimizer, loss_fn, is_pretrained, normali
     """
 
     with tf.name_scope('base_model'):
-        inputs, outputs = base_model
+        inputs, outputs, labels = base_model
     
     with tf.name_scope('loss'):
-        labels = tf.placeholder(name='labels', dtype=tf.int32, shape=(None,))
         if normalized == True:
             outputs = l2_normalized(outputs)
         
-        loss, positive_mean_distance, negative_mean_distance = loss_fn(labels=labels, embeddings=outputs)
+        loss = loss_fn(labels=labels, embeddings=outputs)
+        distance_metrics = mean_distances(outputs, labels, metric=loss_fn.metric, normalized=normalized)
     
     with tf.name_scope('train_step'):
         train_step = optimizer.minimize(loss)
     
     if is_pretrained == True:
         session.run(tf.variables_initializer(optimizer.variables()))
-    return inputs, outputs, labels, loss, positive_mean_distance, negative_mean_distance, train_step
-
-def validate_siamese_model(
-    session,
-    model, 
-    source_path, 
-    val_dirs, 
-    val_labels,
-    metric,
-    margin,
-    batch_loader,
-    num_per_class,
-    batch_size,
-):
-    """
-    Validates a siamese model
     
-    Parameters:
-    -----------
-    - session: Tensorflow Session instance.
-    - model: tuple
-        Sould contain three tensors (inputs, labels, loss).
-    - source_path: string
-        Path to model data.
-    - val_dirs: [string]
-        List of validation directories.
-    - val_labels: [int]
-        List of validation class labels.
-    - metric: Function
-        Should take output tensor as a parameter and compute distance matrix between outputs.
-    - batch_loader: Function
-        Should take source_path, train_dirs, train_labels, num_per_class as parameters
-        and return an iterator [samples, batch_lables]
-    - num_per_class: int
-        Number of samples randomly chosen from each class
-    - batch_size: int
-        Number of classes to use in a single batch. Total number of samples will be batch_size * num_per_class
-    
-    Returns:
-    --------
-    - batch_loss: float
-        Value of the loss function on the validation batch.
-    """
-
-
-    samples, batch_lables = batch_loader(source_path, val_dirs, val_labels, num_per_class, batch_size if (batch_size != None) and (batch_size < len(val_dirs)) else None)
-    inputs, labels, loss = model
-    
-    batch_loss= session.run(loss, {
-        inputs: samples,
-        labels: batch_lables,
-    })
-
-    return batch_loss
+    return inputs, outputs, labels, loss, train_step, distance_metrics
 
 @with_saver
 @with_tensorboard
@@ -160,16 +109,58 @@ def train_siamese_model(
     train_dirs, val_dirs = dirs
     train_labels, val_labels = labels
     
-    inputs, outputs, labels, loss, positive_mean_distance, negative_mean_distance, train_step = model
-    training_loss_summary = tf.summary.scalar("training_loss", loss)
-    tarining_positive_mean_distance_summary = tf.summary.scalar('training_positive_mean_distance', positive_mean_distance)
-    tarining_negative_mean_distance_summary = tf.summary.scalar('training_negative_mean_distance', negative_mean_distance)
-    validation_loss_summary = tf.summary.scalar("validation_loss", loss)
-    validation_positive_mean_distance_summary = tf.summary.scalar('validation_positive_mean_distance', positive_mean_distance)
-    validation_negative_mean_distance_summary = tf.summary.scalar('validation_negative_mean_distance', negative_mean_distance)
+    inputs, outputs, labels, loss, train_step, distance_metrics = model
+    positive_mean_distance, negative_mean_distance, hardest_mean_positive_distance, hardest_mean_negative_distance = distance_metrics
+    
+    with tf.name_scope('training'):
+        training_loss_summary = tf.summary.scalar("loss", loss)
+        training_positive_mean_distance_summary = tf.summary.scalar("positive_mean_distance", positive_mean_distance)
+        training_negative_mean_distance_summary = tf.summary.scalar("negative_mean_distance", negative_mean_distance)
+        training_hardest_mean_positive_distance_summary = tf.summary.scalar("hardest_mean_positive_distance", hardest_mean_positive_distance)
+        training_hardest_mean_negative_distance_summary = tf.summary.scalar("hardest_mean_negative_distance", hardest_mean_negative_distance)
+
+    with tf.name_scope('validation'):
+        validation_loss_summary = tf.summary.scalar("loss", loss)
+        validation_positive_mean_distance_summary = tf.summary.scalar("positive_mean_distance", positive_mean_distance)
+        validation_negative_mean_distance_summary = tf.summary.scalar("negative_mean_distance", negative_mean_distance)
+        validation_hardest_mean_positive_distance_summary = tf.summary.scalar("hardest_mean_positive_distance", hardest_mean_positive_distance)
+        validation_hardest_mean_negative_distance_summary = tf.summary.scalar("hardest_mean_negative_distance", hardest_mean_negative_distance)
 
     if is_pretrained == False:
         session.run(tf.global_variables_initializer())
+
+    if observer != None:
+            print('Calculating training loss...')
+            log_samples, log_lables = batch_loader(dirs=train_dirs, labels=train_labels, random=True, batch_size=batch_size)
+            observer.emit(ON_LOG, -1, 
+                {
+                    inputs: log_samples,
+                    labels: log_lables,
+                }, 
+                [
+                    training_loss_summary,
+                    training_positive_mean_distance_summary,
+                    training_negative_mean_distance_summary,
+                    training_hardest_mean_positive_distance_summary,
+                    training_hardest_mean_negative_distance_summary,
+                ],
+            )
+
+            print('Validating...')
+            log_samples, log_lables = batch_loader(dirs=val_dirs, labels=val_labels, random=True, batch_size=None)
+            observer.emit(ON_LOG, -1, 
+                {
+                    inputs: log_samples,
+                    labels: log_lables,
+                }, 
+                [
+                    validation_loss_summary,
+                    validation_positive_mean_distance_summary,
+                    validation_negative_mean_distance_summary,
+                    validation_hardest_mean_positive_distance_summary,
+                    validation_hardest_mean_negative_distance_summary,
+                ],
+            )
     
     for i in range(epochs):
         # for j, samples, batch_labels in batch_generator:
@@ -207,9 +198,11 @@ def train_siamese_model(
                     labels: log_lables,
                 }, 
                 [
-                    training_loss_summary, 
-                    tarining_positive_mean_distance_summary, 
-                    tarining_negative_mean_distance_summary
+                    training_loss_summary,
+                    training_positive_mean_distance_summary,
+                    training_negative_mean_distance_summary,
+                    training_hardest_mean_positive_distance_summary,
+                    training_hardest_mean_negative_distance_summary,
                 ],
             )
 
@@ -222,9 +215,11 @@ def train_siamese_model(
                     labels: log_lables,
                 }, 
                 [
-                    validation_loss_summary, 
-                    validation_positive_mean_distance_summary, 
-                    validation_negative_mean_distance_summary
+                    validation_loss_summary,
+                    validation_positive_mean_distance_summary,
+                    validation_negative_mean_distance_summary,
+                    validation_hardest_mean_positive_distance_summary,
+                    validation_hardest_mean_negative_distance_summary,
                 ],
             )
 

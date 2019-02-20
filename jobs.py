@@ -7,7 +7,7 @@ from sklearn.model_selection import train_test_split
 from loaders.data import load_CIFAR10_data
 from loaders.batch import batch_of_images_generator, load_batch_of_images, cv2_loader, pil_loader, load_batch_of_data
 from loaders.models import load_deep_sort_cnn, load_simple_model, load_simpler_model,load_complex_model
-from utils.metrics import cosine_distance, eucledian_distance
+from utils.metrics import cosine_distance, eucledian_distance, omoindrot_eucledian_distance
 from siamese.supervisor import train_siamese_model, create_graph as create_siamese_graph
 from siamese.losses.strategies import triplet_semihard_loss, batch_hard_triplet_loss, batch_all_triplet_loss
 from classifier.supervisor import train_classifier, create_graph as create_classification_graph
@@ -16,6 +16,8 @@ import argparse
 from constants import LOG_DIR_PATH
 from auxillaries.events import EventAggregator
 from functools import partial
+from classes.loss_fn import Triplet_loss_fn
+from global_context import context as ctx
 
 def log_args(args):
     print('-----------------------------')
@@ -82,9 +84,24 @@ def siamese_job(source_path, model_loader, **kwargs):
 
     session = tf.Session()
     inputs, outputs, is_pretrained = model_loader(session)
+    labels = tf.placeholder(name='labels', dtype=tf.int32, shape=(None,))
+
+    eval_samples, eval_labels = load_batch_of_images(
+        path=source_path,
+        num_per_class=4, 
+        image_shape=(128, 64, 3), 
+        loader=cv2_loader,
+        dirs=train_dirs[0:3], 
+        labels=train_labels[0:3], 
+        batch_size=None,
+    )
+    ctx['evaluator'].initialize(session=session, feed_dict={
+        inputs: eval_samples,
+        labels: eval_labels,
+    })
 
     optimizer = tf.train.AdamOptimizer(learning_rate=lr)
-    model = create_siamese_graph(session=session, base_model=[inputs, outputs], optimizer=optimizer, loss_fn=loss_fn, is_pretrained=is_pretrained, normalized=normalized)
+    model = create_siamese_graph(session=session, base_model=[inputs, outputs, labels], optimizer=optimizer, loss_fn=loss_fn, is_pretrained=is_pretrained, normalized=normalized)
 
     train_siamese_model(
         session=session,
@@ -266,6 +283,10 @@ def main():
         metric = partial(eucledian_distance, squared=True)
     elif args.metric == 'cosine':
         metric = cosine_distance
+    elif args.metric == 'omoindrot_eucledian':
+        metric = partial(omoindrot_eucledian_distance, squared=False)
+    elif args.metric == 'omoindrot_eucledian_squared':
+        metric = partial(omoindrot_eucledian_distance, squared=True)
 
     #get loss function
     if args.loss == 'hinge':
@@ -273,11 +294,11 @@ def main():
     elif args.loss == 'softmax':
         loss_fn = compute_softmax_loss
     elif args.loss == 'triplet_semihard':
-        loss_fn = partial(triplet_semihard_loss, metric=metric, margin=args.margin)
+        loss_fn = Triplet_loss_fn(triplet_semihard_loss, metric=metric, margin=args.margin)
     elif args.loss == 'triplet_hard':
-        loss_fn = partial(batch_hard_triplet_loss, metric=metric, margin=args.margin)
+        loss_fn = Triplet_loss_fn(batch_hard_triplet_loss, metric=metric, margin=args.margin)
     elif args.loss == 'triplet_all':
-        loss_fn = partial(batch_all_triplet_loss, metric=metric, margin=args.margin)
+        loss_fn = Triplet_loss_fn(batch_all_triplet_loss, metric=metric, margin=args.margin)
 
     #get data loader
     if args.data == 'cifar10':

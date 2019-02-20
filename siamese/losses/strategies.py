@@ -4,8 +4,10 @@ from tensorflow.python.framework import dtypes
 from utils.metrics import l2_normalized
 from pyramda import compose
 from utils.curried_functions import tf_multiply, tf_cast, tf_equal
-from siamese.losses.utils import masked_maximum, masked_minimum, mean_distances, _get_anchor_negative_triplet_mask, _get_anchor_positive_triplet_mask, _get_triplet_mask
+from siamese.losses.utils import masked_maximum, masked_minimum, _get_anchor_negative_triplet_mask, _get_anchor_positive_triplet_mask, _get_triplet_mask
 import tensorflow as tf
+from global_context import context as ctx
+evaluate = ctx['evaluator'].evaluate
 
 #### Original implementation: https://github.com/tensorflow/tensorflow/blob/r1.12/tensorflow/contrib/losses/python/metric_learning/metric_loss_ops.py
 def triplet_semihard_loss(labels, embeddings, metric, margin=1.0):
@@ -83,9 +85,7 @@ def triplet_semihard_loss(labels, embeddings, metric, margin=1.0):
         num_positives,
         name='triplet_semihard_loss')
 
-    positive_mean_distance, negative_mean_distance = mean_distances(embeddings, labels, metric)
-
-    return triplet_loss, positive_mean_distance, negative_mean_distance
+    return triplet_loss
 
 #### Original implementation: https://github.com/omoindrot/tensorflow-triplet-loss/blob/master/model/triplet_loss.py
 def batch_all_triplet_loss(labels, embeddings, metric, margin):
@@ -134,9 +134,7 @@ def batch_all_triplet_loss(labels, embeddings, metric, margin):
     # Get final mean triplet loss over the positive valid triplets
     triplet_loss = tf.reduce_sum(triplet_loss) / (num_positive_triplets + 1e-16)
 
-    positive_mean_distance, negative_mean_distance = mean_distances(embeddings, labels, metric)
-
-    return triplet_loss, positive_mean_distance, negative_mean_distance#, fraction_positive_triplets
+    return triplet_loss
 
 
 def batch_hard_triplet_loss(labels, embeddings, metric, margin):
@@ -151,9 +149,10 @@ def batch_hard_triplet_loss(labels, embeddings, metric, margin):
     Returns:
         triplet_loss: scalar tensor containing the triplet loss
     """
+
     # Get the pairwise distance matrix
     pairwise_dist = metric(embeddings)
-
+    
     # For each anchor, get the hardest positive
     # First, we need to get a mask for every valid positive (they should have same label)
     mask_anchor_positive = _get_anchor_positive_triplet_mask(labels)
@@ -164,7 +163,6 @@ def batch_hard_triplet_loss(labels, embeddings, metric, margin):
 
     # shape (batch_size, 1)
     hardest_positive_dist = tf.reduce_max(anchor_positive_dist, axis=1, keepdims=True)
-    tf.summary.scalar("hardest_positive_dist", tf.reduce_mean(hardest_positive_dist))
 
     # For each anchor, get the hardest negative
     # First, we need to get a mask for every valid negative (they should have different labels)
@@ -177,7 +175,6 @@ def batch_hard_triplet_loss(labels, embeddings, metric, margin):
 
     # shape (batch_size,)
     hardest_negative_dist = tf.reduce_min(anchor_negative_dist, axis=1, keepdims=True)
-    tf.summary.scalar("hardest_negative_dist", tf.reduce_mean(hardest_negative_dist))
 
     # Combine biggest d(a, p) and smallest d(a, n) into final triplet loss
     triplet_loss = tf.maximum(hardest_positive_dist - hardest_negative_dist + margin, 0.0)
@@ -185,6 +182,4 @@ def batch_hard_triplet_loss(labels, embeddings, metric, margin):
     # Get final mean triplet loss
     triplet_loss = tf.reduce_mean(triplet_loss)
 
-    positive_mean_distance, negative_mean_distance = mean_distances(embeddings, labels, metric)
-
-    return triplet_loss, positive_mean_distance, negative_mean_distance
+    return triplet_loss

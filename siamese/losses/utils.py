@@ -2,9 +2,11 @@ from tensorflow.python.ops import math_ops
 from tensorflow.python.ops import array_ops
 from tensorflow.python.framework import dtypes
 from utils.metrics import l2_normalized
-from utils.curried_functions import tf_equal, tf_multiply, tf_cast
+from utils.curried_functions import tf_equal, tf_multiply, tf_cast, tf_add
 from pyramda import compose
 import tensorflow as tf
+from global_context import context as ctx
+evaluate = ctx['evaluator'].evaluate
 
 #### Original implementation: https://github.com/tensorflow/tensorflow/blob/r1.12/tensorflow/contrib/losses/python/metric_learning/metric_loss_ops.py
 def masked_maximum(data, mask, dim=1):
@@ -39,32 +41,40 @@ def masked_minimum(data, mask, dim=1):
         math_ops.multiply(data - axis_maximums, mask), dim,
         keepdims=True) + axis_maximums
     return masked_minimums
+    
+def mean_distances(embeddings, labels, metric, normalized):
+    if normalized == True:
+        embeddings = l2_normalized(embeddings)
 
-def mean_distances(embeddings, labels, metric):
-    pdist_matrix = metric(l2_normalized(embeddings))
+    labels = array_ops.reshape(labels, [array_ops.shape(labels)[0], 1])
+
+    dist_matrix = metric(embeddings)
     adjacency = compose(
         tf_equal(labels),
         array_ops.transpose,
     )(labels)
-    
     adjacency_not = compose(
         tf_cast(dtype=dtypes.float32),
         math_ops.logical_not,
     )(adjacency)
-
     adjacency = math_ops.cast(adjacency, dtype=dtypes.float32)
 
-    positive_mean_distance = compose(
-        math_ops.reduce_mean,
+    pdist_matrix = tf.multiply(dist_matrix, adjacency)
+    ndist_matrix = tf.multiply(dist_matrix, adjacency_not)
+    ndist_matrix = compose(
+        tf_add(ndist_matrix),
         tf_multiply(adjacency),
+        tf_add(tf.reduce_max(dist_matrix, axis=1, keepdims=True)),
     )(pdist_matrix)
 
-    negative_mean_distance = compose(
-        math_ops.reduce_mean,
-        tf_multiply(adjacency_not),
-    )(pdist_matrix)
+    positive_mean_distance = math_ops.reduce_mean(pdist_matrix)
+    negative_mean_distance = math_ops.reduce_mean(ndist_matrix)
+    hardest_positive_dist = tf.reduce_max(pdist_matrix, axis=1, keepdims=True)
+    hardest_mean_positive_distance = tf.reduce_mean(hardest_positive_dist)
+    hardest_negative_dist = tf.reduce_min(ndist_matrix, axis=1, keepdims=True)
+    hardest_mean_negative_distance = tf.reduce_mean(hardest_negative_dist)
 
-    return positive_mean_distance, negative_mean_distance
+    return positive_mean_distance, negative_mean_distance, hardest_mean_positive_distance, hardest_mean_negative_distance
 
 #### Original implementation: https://github.com/omoindrot/tensorflow-triplet-loss/blob/master/model/triplet_loss.py
 def _pairwise_distances(embeddings, squared=False):
