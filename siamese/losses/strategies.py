@@ -85,7 +85,7 @@ def triplet_semihard_loss(labels, embeddings, metric, margin=1.0):
         num_positives,
         name='triplet_semihard_loss')
 
-    return triplet_loss
+    return triplet_loss, 0
 
 #### Original implementation: https://github.com/omoindrot/tensorflow-triplet-loss/blob/master/model/triplet_loss.py
 def batch_all_triplet_loss(labels, embeddings, metric, margin):
@@ -134,7 +134,7 @@ def batch_all_triplet_loss(labels, embeddings, metric, margin):
     # Get final mean triplet loss over the positive valid triplets
     triplet_loss = tf.reduce_sum(triplet_loss) / (num_positive_triplets + 1e-16)
 
-    return triplet_loss
+    return triplet_loss, num_positive_triplets
 
 
 def batch_hard_triplet_loss(labels, embeddings, metric, margin):
@@ -182,4 +182,4 @@ def batch_hard_triplet_loss(labels, embeddings, metric, margin):
     # Get final mean triplet loss
     triplet_loss = tf.reduce_mean(triplet_loss)
 
-    return triplet_loss
+    return triplet_loss, 0

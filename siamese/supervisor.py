@@ -45,7 +45,7 @@ def create_graph(session, base_model, optimizer, loss_fn, is_pretrained, normali
         if normalized == True:
             outputs = l2_normalized(outputs)
         
-        loss = loss_fn(labels=labels, embeddings=outputs)
+        loss, num_positive_triplets = loss_fn(labels=labels, embeddings=outputs)
         distance_metrics = mean_distances(outputs, labels, metric=loss_fn.metric, normalized=normalized)
     
     with tf.name_scope('train_step'):
@@ -54,7 +54,7 @@ def create_graph(session, base_model, optimizer, loss_fn, is_pretrained, normali
     if is_pretrained == True:
         session.run(tf.variables_initializer(optimizer.variables()))
     
-    return inputs, outputs, labels, loss, train_step, distance_metrics
+    return inputs, outputs, labels, loss, train_step, distance_metrics, num_positive_triplets
 
 @with_saver
 @with_tensorboard
@@ -109,7 +109,7 @@ def train_siamese_model(
     train_dirs, val_dirs = dirs
     train_labels, val_labels = labels
     
-    inputs, outputs, labels, loss, train_step, distance_metrics = model
+    inputs, outputs, labels, loss, train_step, distance_metrics, num_positive_triplets = model
     positive_mean_distance, negative_mean_distance, hardest_mean_positive_distance, hardest_mean_negative_distance = distance_metrics
     
     with tf.name_scope('training'):
@@ -118,6 +118,7 @@ def train_siamese_model(
         training_negative_mean_distance_summary = tf.summary.scalar("negative_mean_distance", negative_mean_distance)
         training_hardest_mean_positive_distance_summary = tf.summary.scalar("hardest_mean_positive_distance", hardest_mean_positive_distance)
         training_hardest_mean_negative_distance_summary = tf.summary.scalar("hardest_mean_negative_distance", hardest_mean_negative_distance)
+        num_positive_triplets_summary = tf.summary.scalar("num_positive_triplets", num_positive_triplets)
 
     with tf.name_scope('validation'):
         validation_loss_summary = tf.summary.scalar("loss", loss)
@@ -143,6 +144,7 @@ def train_siamese_model(
                     training_negative_mean_distance_summary,
                     training_hardest_mean_positive_distance_summary,
                     training_hardest_mean_negative_distance_summary,
+                    num_positive_triplets_summary,
                 ],
             )
 
@@ -190,6 +192,7 @@ def train_siamese_model(
                     training_negative_mean_distance_summary,
                     training_hardest_mean_positive_distance_summary,
                     training_hardest_mean_negative_distance_summary,
+                    num_positive_triplets_summary,
                 ],
             )
 
