@@ -64,6 +64,7 @@ def siamese_job(source_path, model_loader, **kwargs):
     num_per_class = kwargs.pop('num_per_class', 5)
     lr = kwargs.pop('lr', 1e-3)
     normalized = kwargs.pop('normalized', True)
+    num_classes = kwargs.pop('num_classes')
     
     tf.reset_default_graph()
 
@@ -75,12 +76,11 @@ def siamese_job(source_path, model_loader, **kwargs):
     labels = classes_to_labels(dirs)
     train_dirs, val_dirs, train_labels, val_labels = train_test_split(dirs, labels, test_size=0.1)
 
-    # Uncomment for local testing
-    # train_dirs = train_dirs[0:100]
-    # train_labels = train_labels[0:100]
-    # val_dirs = val_dirs[0:10]
-    # val_labels = val_labels[0:10]
-    #############################
+    if (num_classes != None):
+        train_dirs = train_dirs[0:num_classes]
+        train_labels = train_labels[0:num_classes]
+        val_dirs = val_dirs[0:num_classes]
+        val_labels = val_labels[0:num_classes]
 
     session = tf.Session()
     inputs, outputs, is_pretrained = model_loader(session)
@@ -246,6 +246,12 @@ def parse_args():
         help="Whether embeddings should be normalized before calculating loss",
         type=int
     )
+    parser.add_argument(
+        "--num_classes",
+        default=None,
+        help="Number of classes to consider from the dataset",
+        type=int
+    )
     return parser.parse_args()
 
 def main():
@@ -324,6 +330,7 @@ def main():
             save_dir=args.save_dir,
             validate_every=args.validate_every,
             normalized=args.normalized == 1,
+            num_classes=args.num_classes,
         )
 
 if __name__ == '__main__':
