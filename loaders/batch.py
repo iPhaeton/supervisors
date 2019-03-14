@@ -75,12 +75,16 @@ def load_batch_of_images(path, dirs, labels, image_shape, loader, num_per_class,
 
     samples = np.zeros((num_per_class * len(batch_dirs), *image_shape))
     batch_labels = np.ones(num_per_class * len(batch_dirs)).astype(int)
-        
+    
     for i, dir_name in enumerate(batch_dirs):
         dir_path = os.path.join(path, dir_name)
         filenames = os.listdir(dir_path)
-        filenames = np.random.choice(filenames, num_per_class)
-            
+        #filenames = np.random.choice(filenames, num_per_class)
+        filenames = filenames[0:num_per_class]
+
+        # if indices is not None:
+        #     print(filenames)
+        
         batch = np.zeros((num_per_class, *image_shape))
 
         for j, filename in enumerate(filenames):

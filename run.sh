@@ -5,7 +5,7 @@ python jobs.py \
     --source_path=../input/mars/bbox_train/ \
     --epochs=11 \
     --num_per_class=4 \
-    --loss=triplet_hard \
+    --loss=triplet_all \
     --metric=cosine \
     --margin=0.5 \
     --lr=1e-5 \
@@ -14,5 +14,5 @@ python jobs.py \
     --save_every=500 \
     --validate_every=100 \
     --normalized=1 \
-    --num_classes=10 \
-    --batch_size=10
+    --num_classes=3 \
+    --batch_size=3
