@@ -60,21 +60,21 @@ def mean_distances(embeddings, labels, metric, normalized):
     adjacency = math_ops.cast(adjacency, dtype=dtypes.float32)
 
     pdist_matrix = tf.multiply(dist_matrix, adjacency)
-    ndist_matrix = tf.multiply(dist_matrix, adjacency_not)
+    _ndist_matrix = tf.multiply(dist_matrix, adjacency_not)
     ndist_matrix = compose(
-        tf_add(ndist_matrix),
+        tf_add(_ndist_matrix),
         tf_multiply(adjacency),
         tf_add(tf.reduce_max(dist_matrix, axis=1, keepdims=True)),
     )(pdist_matrix)
 
     positive_mean_distance = math_ops.reduce_mean(pdist_matrix)
-    negative_mean_distance = math_ops.reduce_mean(ndist_matrix)
+    negative_mean_distance = math_ops.reduce_mean(_ndist_matrix)
     hardest_positive_dist = tf.reduce_max(pdist_matrix, axis=1, keepdims=True)
     hardest_mean_positive_distance = tf.reduce_mean(hardest_positive_dist)
     hardest_negative_dist = tf.reduce_min(ndist_matrix, axis=1, keepdims=True)
     hardest_mean_negative_distance = tf.reduce_mean(hardest_negative_dist)
 
-    return [positive_mean_distance, negative_mean_distance, hardest_mean_positive_distance, hardest_mean_negative_distance], pdist_matrix
+    return [positive_mean_distance, negative_mean_distance, hardest_mean_positive_distance, hardest_mean_negative_distance], negative_mean_distance
 
 #### Original implementation: https://github.com/omoindrot/tensorflow-triplet-loss/blob/master/model/triplet_loss.py
 def _pairwise_distances(embeddings, squared=False):

@@ -6,13 +6,13 @@ python jobs.py \
     --epochs=100 \
     --num_per_class=4 \
     --loss=triplet_all \
-    --metric=cosine \
+    --metric=eucledian_squared \
     --margin=0.5 \
-    --lr=1e-12 \
+    --lr=1e-7 \
     --log_every=1 \
     --save_dir=./checkpoints \
     --save_every=500 \
     --validate_every=100 \
     --normalized=1 \
-    --num_classes=3 \
-    --batch_size=3
+    --num_classes=10 \
+    --batch_size=10
