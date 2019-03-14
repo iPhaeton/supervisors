@@ -74,7 +74,7 @@ def mean_distances(embeddings, labels, metric, normalized):
     hardest_negative_dist = tf.reduce_min(ndist_matrix, axis=1, keepdims=True)
     hardest_mean_negative_distance = tf.reduce_mean(hardest_negative_dist)
 
-    return positive_mean_distance, negative_mean_distance, hardest_mean_positive_distance, hardest_mean_negative_distance
+    return [positive_mean_distance, negative_mean_distance, hardest_mean_positive_distance, hardest_mean_negative_distance], pdist_matrix
 
 #### Original implementation: https://github.com/omoindrot/tensorflow-triplet-loss/blob/master/model/triplet_loss.py
 def _pairwise_distances(embeddings, squared=False):

@@ -104,10 +104,10 @@ def batch_all_triplet_loss(labels, embeddings, metric, margin):
 
     # Get the pairwise distance matrix
     pairwise_dist = metric(embeddings)
-    #print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', evaluate(tf.shape(pairwise_dist)))
 
     # shape (batch_size, batch_size, 1)
     anchor_positive_dist = tf.expand_dims(pairwise_dist, 2)
+    #print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', evaluate(anchor_positive_dist))
     assert anchor_positive_dist.shape[2] == 1, "{}".format(anchor_positive_dist.shape)
     # shape (batch_size, 1, batch_size)
     anchor_negative_dist = tf.expand_dims(pairwise_dist, 1)
@@ -137,7 +137,7 @@ def batch_all_triplet_loss(labels, embeddings, metric, margin):
     # Get final mean triplet loss over the positive valid triplets
     triplet_loss = tf.reduce_sum(triplet_loss) / (num_positive_triplets + 1e-16)
 
-    return triplet_loss, num_positive_triplets, pairwise_dist
+    return triplet_loss, num_positive_triplets, tf.reduce_sum(anchor_positive_dist)
 
 
 def batch_hard_triplet_loss(labels, embeddings, metric, margin):
