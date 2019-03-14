@@ -8,7 +8,7 @@ python jobs.py \
     --loss=triplet_all \
     --metric=cosine \
     --margin=0.5 \
-    --lr=1e-5 \
+    --lr=1e-12 \
     --log_every=1 \
     --save_dir=./checkpoints \
     --save_every=500 \

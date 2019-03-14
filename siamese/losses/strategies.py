@@ -100,8 +100,11 @@ def batch_all_triplet_loss(labels, embeddings, metric, margin):
     Returns:
         triplet_loss: scalar tensor containing the triplet loss
     """
+    #ctx['evaluator'].initialize_session(tf.global_variables_initializer())
+
     # Get the pairwise distance matrix
     pairwise_dist = metric(embeddings)
+    #print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', evaluate(tf.shape(pairwise_dist)))
 
     # shape (batch_size, batch_size, 1)
     anchor_positive_dist = tf.expand_dims(pairwise_dist, 2)
@@ -134,7 +137,7 @@ def batch_all_triplet_loss(labels, embeddings, metric, margin):
     # Get final mean triplet loss over the positive valid triplets
     triplet_loss = tf.reduce_sum(triplet_loss) / (num_positive_triplets + 1e-16)
 
-    return triplet_loss, num_positive_triplets
+    return triplet_loss, num_positive_triplets, pairwise_dist
 
 
 def batch_hard_triplet_loss(labels, embeddings, metric, margin):
@@ -149,11 +152,8 @@ def batch_hard_triplet_loss(labels, embeddings, metric, margin):
     Returns:
         triplet_loss: scalar tensor containing the triplet loss
     """
-    #ctx['evaluator'].initialize_session(tf.global_variables_initializer())
-
     # Get the pairwise distance matrix
     pairwise_dist = metric(embeddings)
-    #print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', evaluate(tf.shape(pairwise_dist)))
 
     # For each anchor, get the hardest positive
     # First, we need to get a mask for every valid positive (they should have same label)

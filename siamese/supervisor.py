@@ -45,7 +45,7 @@ def create_graph(session, base_model, optimizer, loss_fn, is_pretrained, normali
         if normalized == True:
             outputs = l2_normalized(outputs)
         
-        loss, num_positive_triplets = loss_fn(labels=labels, embeddings=outputs)
+        loss, num_positive_triplets, pairwise_dist = loss_fn(labels=labels, embeddings=outputs)
         distance_metrics = mean_distances(outputs, labels, metric=loss_fn.metric, normalized=normalized)
     
     with tf.name_scope('train_step'):
@@ -54,7 +54,7 @@ def create_graph(session, base_model, optimizer, loss_fn, is_pretrained, normali
     if is_pretrained == True:
         session.run(tf.variables_initializer(optimizer.variables()))
     
-    return inputs, outputs, labels, loss, train_step, distance_metrics, num_positive_triplets
+    return inputs, outputs, labels, loss, train_step, distance_metrics, num_positive_triplets, pairwise_dist
 
 @with_saver
 @with_tensorboard
@@ -109,7 +109,7 @@ def train_siamese_model(
     train_dirs, val_dirs = dirs
     train_labels, val_labels = labels
     
-    inputs, outputs, labels, loss, train_step, distance_metrics, num_positive_triplets = model
+    inputs, outputs, labels, loss, train_step, distance_metrics, num_positive_triplets, something_else = model
     positive_mean_distance, negative_mean_distance, hardest_mean_positive_distance, hardest_mean_negative_distance = distance_metrics
     
     with tf.name_scope('training'):
@@ -171,9 +171,9 @@ def train_siamese_model(
                 labels: batch_labels,
             }
 
-            batch_loss, _ = session.run([loss, train_step], feed_dict)
+            batch_loss, batch_something_else, _ = session.run([loss, something_else, train_step], feed_dict)
 
-            print(f'Epoch {i}. Iteration {j}. Batch loss: {batch_loss}')
+            print(f'Epoch {i}. Iteration {j}. Batch loss: {batch_something_else}')
             
             if j == -1:
                 break
