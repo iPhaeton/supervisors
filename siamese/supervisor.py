@@ -167,7 +167,6 @@ def train_siamese_model(
     
     for i in range(epochs):
         for j, samples, batch_labels in batch_generator:
-            print(np.max(samples), np.min(samples))
             feed_dict = {
                 inputs: samples,
                 labels: batch_labels,

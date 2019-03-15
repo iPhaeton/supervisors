@@ -41,15 +41,15 @@ def load_deep_sort_cnn(session, model_path, checkpoint_path):
 
     return inputs, outputs, checkpoint_path != None
 
-def load_simple_model():
+def load_simple_model(_):
     X = tf.placeholder(tf.float32, [None, 64, 64, 3])
     # setup variables
     Wconv0 = tf.get_variable("Wconv0", shape=[2, 2, 3, 16])
     bconv0 = tf.get_variable("bconv0", shape=[16])
     Wconv1 = tf.get_variable("Wconv1", shape=[7, 7, 16, 32])
     bconv1 = tf.get_variable("bconv1", shape=[32])
-    W1 = tf.get_variable("W1", shape=[5408, 10])
-    b1 = tf.get_variable("b1", shape=[10])
+    W1 = tf.get_variable("W1", shape=[5408, 128])
+    b1 = tf.get_variable("b1", shape=[128])
 
     tf.summary.histogram('Wconv0', Wconv0)
     tf.summary.histogram('bconv0', bconv0)
@@ -64,8 +64,9 @@ def load_simple_model():
     a1 = tf.nn.conv2d(h0, Wconv1, strides=[1,2,2,1], padding='VALID') + bconv1
     h1 = tf.nn.relu(a1)
     h1_flat = tf.reshape(h1,[-1,5408])
-    y_out = tf.matmul(h1_flat,W1) + b1
-    return X, y_out
+    a_out = tf.matmul(h1_flat,W1) + b1
+    y_out = tf.nn.relu(a_out)
+    return X, y_out, False
 
 def load_simpler_model():
     X = tf.placeholder(tf.float32, [None, 32, 32, 3])

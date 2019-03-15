@@ -1,18 +1,17 @@
 python jobs.py \
     --job_name=siamese \
-    --model_name=deep_sort_cnn \
-    --model_path=../input/models/deep_sort_cnn/freeze_model.py \
+    --model_name=simple \
     --source_path=../input/mars/bbox_train/ \
-    --epochs=100 \
-    --num_per_class=4 \
+    --epochs=1000 \
+    --num_per_class=3 \
     --loss=triplet_all \
     --metric=eucledian_squared \
     --margin=0.5 \
-    --lr=1e-7 \
+    --lr=1e-3 \
     --log_every=1 \
     --save_dir=./checkpoints \
     --save_every=500 \
     --validate_every=100 \
     --normalized=1 \
-    --num_classes=10 \
-    --batch_size=10
+    --num_classes=2 \
+    --batch_size=2

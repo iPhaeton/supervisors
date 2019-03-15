@@ -81,7 +81,7 @@ def load_batch_of_images(path, dirs, labels, image_shape, loader, num_per_class,
         filenames = os.listdir(dir_path)
         #filenames = np.random.choice(filenames, num_per_class)
         filenames = filenames[0:num_per_class]
-
+        
         # if indices is not None:
         #     print(filenames)
         
