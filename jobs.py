@@ -117,6 +117,7 @@ def siamese_job(source_path, model_loader, **kwargs):
             image_shape=(128, 64, 3), 
             loader=cv2_loader,
             shuffle=False,
+            normalize=True,
         ),
         batch_loader = partial(load_batch_of_images,
             path=source_path, 

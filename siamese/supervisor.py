@@ -6,6 +6,7 @@ from decorators import with_tensorboard, with_saver
 from constants import ON_EPOCH_END, ON_LOG
 from utils.metrics import l2_normalized
 from siamese.losses.utils import mean_distances
+import numpy as np
 
 def create_graph(session, base_model, optimizer, loss_fn, is_pretrained, normalized=True):
     """
@@ -166,6 +167,7 @@ def train_siamese_model(
     
     for i in range(epochs):
         for j, samples, batch_labels in batch_generator:
+            print(np.max(samples), np.min(samples))
             feed_dict = {
                 inputs: samples,
                 labels: batch_labels,

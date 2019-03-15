@@ -119,6 +119,8 @@ def batch_of_images_generator(shuffle=True, **kwargs):
         Number of images that should be randomly chosen from each class.
     - batch_size: int
         Number of classes to use in a single batch. Total number of samples will be batch_size * num_per_class
+    - normalize: bool
+        If images should be normalized
       
     Returns:
     --------
@@ -134,6 +136,7 @@ def batch_of_images_generator(shuffle=True, **kwargs):
 
     dirs = kwargs.get('dirs')
     batch_size = kwargs.get('batch_size')
+    normalize = kwargs.pop('normalize', True)
     if shuffle == True:
         indices = np.random.permutation(len(dirs))
     else:
@@ -154,6 +157,9 @@ def batch_of_images_generator(shuffle=True, **kwargs):
             iter_count = -1
             if shuffle == True:
                 indices = np.random.permutation(len(dirs))
+
+        if normalize == True:
+            samples = (samples - 127.5) / 127.5
         
         yield iter_count, samples, batch_labels
 
