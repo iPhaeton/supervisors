@@ -17,7 +17,7 @@ def cv2_loader(path, image_shape):
     img = cv2.resize(img, (image_shape[1], image_shape[0]))
     return np.array(img)
 
-def load_batch_of_images(path, dirs, labels, image_shape, loader, num_per_class, batch_size=None, random=False, indices=None):
+def load_batch_of_images(path, dirs, labels, image_shape, loader, num_per_class, batch_size=None, random=False, indices=None, normalize=True):
     """
     Loads a random batch of images
     
@@ -88,6 +88,9 @@ def load_batch_of_images(path, dirs, labels, image_shape, loader, num_per_class,
             
         samples[i*num_per_class: i*num_per_class + num_per_class, :, :, :] = batch
         batch_labels[i*num_per_class: i*num_per_class + num_per_class] = batch_labels[i*num_per_class: i*num_per_class + num_per_class] * labels[i]
+
+    if normalize == True:
+        samples = (samples - 127.5) / 127.5
     
     return samples, batch_labels
 
@@ -115,6 +118,8 @@ def batch_of_images_generator(shuffle=True, **kwargs):
         Number of images that should be randomly chosen from each class.
     - batch_size: int
         Number of classes to use in a single batch. Total number of samples will be batch_size * num_per_class
+    - normalize: bool
+        If images should be normalized
       
     Returns:
     --------
@@ -130,6 +135,7 @@ def batch_of_images_generator(shuffle=True, **kwargs):
 
     dirs = kwargs.get('dirs')
     batch_size = kwargs.get('batch_size')
+    normalize = kwargs.pop('normalize', True)
     if shuffle == True:
         indices = np.random.permutation(len(dirs))
     else:
@@ -144,7 +150,7 @@ def batch_of_images_generator(shuffle=True, **kwargs):
         start_idx = iter_count * batch_size
         end_idx = min(start_idx + batch_size, len(dirs))
 
-        samples, batch_labels = load_batch_of_images(**kwargs, random=False, indices=indices[start_idx:end_idx])
+        samples, batch_labels = load_batch_of_images(**kwargs, random=False, indices=indices[start_idx:end_idx], normalize=normalize)
         
         if end_idx >= len(dirs):
             iter_count = -1
