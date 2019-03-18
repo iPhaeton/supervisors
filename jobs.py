@@ -100,14 +100,14 @@ def siamese_job(source_path, model_loader, **kwargs):
         labels: eval_labels,
     })
 
-    optimizer = tf.train.AdamOptimizer(learning_rate=lr)
-    model = create_siamese_graph(session=session, base_model=[inputs, outputs, labels], optimizer=optimizer, loss_fn=loss_fn, is_pretrained=is_pretrained, normalized=normalized)
+    model = create_siamese_graph(session=session, base_model=[inputs, outputs, labels], optimizer=tf.train.AdamOptimizer, loss_fn=loss_fn, is_pretrained=is_pretrained, normalized=normalized)
 
     train_siamese_model(
         session=session,
         model=model,
         dirs=[train_dirs, val_dirs],
         labels=[train_labels, val_labels],
+        initial_lr=lr,
         batch_generator=batch_of_images_generator(
             path=source_path, 
             dirs=train_dirs, 

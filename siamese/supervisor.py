@@ -49,12 +49,14 @@ def create_graph(session, base_model, optimizer, loss_fn, is_pretrained, normali
         distance_metrics = mean_distances(outputs, labels, metric=loss_fn.metric, normalized=normalized)
     
     with tf.name_scope('train_step'):
-        train_step = optimizer.minimize(loss)
+        learning_rate = tf.placeholder(tf.float32, shape=[])
+        minimizer = optimizer(learning_rate=learning_rate)
+        train_step = minimizer.minimize(loss)
     
     if is_pretrained == True:
         session.run(tf.variables_initializer(optimizer.variables()))
     
-    return inputs, outputs, labels, loss, train_step, distance_metrics, num_positive_triplets
+    return inputs, outputs, labels, learning_rate, loss, train_step, distance_metrics, num_positive_triplets
 
 @with_saver
 @with_tensorboard
@@ -63,6 +65,7 @@ def train_siamese_model(
     model, 
     dirs,
     labels,
+    initial_lr,
     batch_generator,
     batch_loader, 
     is_pretrained,
@@ -85,6 +88,8 @@ def train_siamese_model(
         List of training and validation directories [train_dirs, val_dirs]
     - labels: [[number]]
         List of training and class_labels [train_labels, val_labels]
+    - initial_lr: float
+        Initial learning rate
     - batch_generator: iterator
         Sould yield [iteration, samples, batch_lables]. For the last batch in an epoch iteration == -1.
     - batch_loader: Function
@@ -109,7 +114,7 @@ def train_siamese_model(
     train_dirs, val_dirs = dirs
     train_labels, val_labels = labels
     
-    inputs, outputs, labels, loss, train_step, distance_metrics, num_positive_triplets = model
+    inputs, outputs, labels, learning_rate, loss, train_step, distance_metrics, num_positive_triplets = model
     positive_mean_distance, negative_mean_distance, hardest_mean_positive_distance, hardest_mean_negative_distance = distance_metrics
     
     with tf.name_scope('training'):
@@ -164,19 +169,24 @@ def train_siamese_model(
                 ],
             )
     
+    lr = initial_lr
     for i in range(epochs):
         for j, samples, batch_labels in batch_generator:
             feed_dict = {
                 inputs: samples,
+                learning_rate: lr,
                 labels: batch_labels,
             }
 
-            batch_loss, _ = session.run([loss, train_step], feed_dict)
+            batch_loss, actual_lr, _ = session.run([loss, learning_rate, train_step], feed_dict)
 
-            print(f'Epoch {i}. Iteration {j}. Batch loss: {batch_loss}')
+            print(f'Epoch {i}. Iteration {j}. Batch loss: {batch_loss}. Learning rate: {actual_lr}')
             
             if j == -1:
                 break
+
+        if (i % 10 == 0) & (i != 0):
+                lr /=2
 
         if (observer != None) & (i % log_every == 0):
             print('Calculating training loss...')
