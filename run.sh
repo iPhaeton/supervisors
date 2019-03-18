@@ -3,7 +3,7 @@ python jobs.py \
     --model_name=simplest \
     --source_path=../input/mars/bbox_train/ \
     --epochs=1000 \
-    --num_per_class=3 \
+    --num_per_class=2 \
     --loss=triplet_all \
     --metric=eucledian_squared \
     --margin=0.5 \

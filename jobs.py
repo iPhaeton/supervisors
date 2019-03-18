@@ -74,7 +74,7 @@ def siamese_job(source_path, model_loader, **kwargs):
     )(source_path)
 
     labels = classes_to_labels(dirs)
-    train_dirs, val_dirs, train_labels, val_labels = train_test_split(dirs, labels, test_size=0.1)
+    train_dirs, val_dirs, train_labels, val_labels = train_test_split(dirs, labels, test_size=0.1, shuffle=False)
 
     if (num_classes != None):
         train_dirs = train_dirs[0:num_classes]
@@ -88,11 +88,11 @@ def siamese_job(source_path, model_loader, **kwargs):
 
     eval_samples, eval_labels = load_batch_of_images(
         path=source_path,
-        num_per_class=4, 
+        num_per_class=2, 
         image_shape=(64, 64, 3), 
         loader=cv2_loader,
-        dirs=train_dirs[0:3], 
-        labels=train_labels[0:3], 
+        dirs=train_dirs[0:2], 
+        labels=train_labels[0:2], 
         batch_size=None,
     )
     ctx['evaluator'].initialize(session=session, feed_dict={
