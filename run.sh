@@ -1,6 +1,6 @@
 python jobs.py \
     --job_name=siamese \
-    --model_name=simple \
+    --model_name=simplest \
     --source_path=../input/mars/bbox_train/ \
     --epochs=1000 \
     --num_per_class=3 \

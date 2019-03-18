@@ -26,6 +26,7 @@ def with_tensorboard(func):
             def log_summary(i, feed_dict, summaries):
                 summaries.append(merged_summary)
                 calculated_summaries = session.run(summaries, feed_dict)
+            
                 for s in calculated_summaries:
                     writer.add_summary(s, i)
 

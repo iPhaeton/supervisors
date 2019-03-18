@@ -6,7 +6,7 @@ import os
 from sklearn.model_selection import train_test_split
 from loaders.data import load_CIFAR10_data
 from loaders.batch import batch_of_images_generator, load_batch_of_images, cv2_loader, pil_loader, load_batch_of_data
-from loaders.models import load_deep_sort_cnn, load_simple_model, load_simpler_model,load_complex_model
+from loaders.models import load_deep_sort_cnn, load_simple_model, load_simpler_model,load_complex_model, load_simplest_model
 from utils.metrics import cosine_distance, eucledian_distance, omoindrot_eucledian_distance
 from siamese.supervisor import train_siamese_model, create_graph as create_siamese_graph
 from siamese.losses.strategies import triplet_semihard_loss, batch_hard_triplet_loss, batch_all_triplet_loss
@@ -273,6 +273,8 @@ def main():
             model_path=args.model_path, 
             checkpoint_path=args.checkpoint_path,
         )
+    elif args.model_name == 'simplest':
+        model_loader = load_simplest_model
 
     #get metric
     if args.metric == 'eucledian':
