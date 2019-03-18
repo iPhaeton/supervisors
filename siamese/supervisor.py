@@ -123,7 +123,7 @@ def train_siamese_model(
         training_negative_mean_distance_summary = tf.summary.scalar("negative_mean_distance", negative_mean_distance)
         training_hardest_mean_positive_distance_summary = tf.summary.scalar("hardest_mean_positive_distance", hardest_mean_positive_distance)
         training_hardest_mean_negative_distance_summary = tf.summary.scalar("hardest_mean_negative_distance", hardest_mean_negative_distance)
-        num_positive_triplets_summary = tf.summary.scalar("num_positive_triplets", num_positive_triplets)
+        training_num_positive_triplets_summary = tf.summary.scalar("num_positive_triplets", num_positive_triplets)
 
     with tf.name_scope('validation'):
         validation_loss_summary = tf.summary.scalar("loss", loss)
@@ -131,6 +131,7 @@ def train_siamese_model(
         validation_negative_mean_distance_summary = tf.summary.scalar("negative_mean_distance", negative_mean_distance)
         validation_hardest_mean_positive_distance_summary = tf.summary.scalar("hardest_mean_positive_distance", hardest_mean_positive_distance)
         validation_hardest_mean_negative_distance_summary = tf.summary.scalar("hardest_mean_negative_distance", hardest_mean_negative_distance)
+        validation_num_positive_triplets_summary = tf.summary.scalar("num_positive_triplets", num_positive_triplets)
 
     if is_pretrained == False:
         session.run(tf.global_variables_initializer())
@@ -149,7 +150,7 @@ def train_siamese_model(
                     training_negative_mean_distance_summary,
                     training_hardest_mean_positive_distance_summary,
                     training_hardest_mean_negative_distance_summary,
-                    num_positive_triplets_summary,
+                    training_num_positive_triplets_summary,
                 ],
             )
 
@@ -166,6 +167,7 @@ def train_siamese_model(
                     validation_negative_mean_distance_summary,
                     validation_hardest_mean_positive_distance_summary,
                     validation_hardest_mean_negative_distance_summary,
+                    validation_num_positive_triplets_summary,
                 ],
             )
     
@@ -185,7 +187,7 @@ def train_siamese_model(
             if j == -1:
                 break
 
-        if (i % 5 == 0) & (i != 0):
+        if (i % 10 == 0) & (i != 0):
                 lr /=2
 
         if (observer != None) & (i % log_every == 0):
@@ -202,7 +204,7 @@ def train_siamese_model(
                     training_negative_mean_distance_summary,
                     training_hardest_mean_positive_distance_summary,
                     training_hardest_mean_negative_distance_summary,
-                    num_positive_triplets_summary,
+                    training_num_positive_triplets_summary,
                 ],
             )
 
@@ -220,6 +222,7 @@ def train_siamese_model(
                     validation_negative_mean_distance_summary,
                     validation_hardest_mean_positive_distance_summary,
                     validation_hardest_mean_negative_distance_summary,
+                    validation_num_positive_triplets_summary,
                 ],
             )
 
