@@ -185,7 +185,7 @@ def train_siamese_model(
             if j == -1:
                 break
 
-        if (i % 10 == 0) & (i != 0):
+        if (i % 5 == 0) & (i != 0):
                 lr /=2
 
         if (observer != None) & (i % log_every == 0):

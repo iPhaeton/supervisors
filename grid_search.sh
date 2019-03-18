@@ -15,7 +15,7 @@ do
                         --source_path=../input/mars/bbox_train/ \
                         --model_path=../input/models/deep_sort_cnn/freeze_model.py \
                         --batch_size=$batch_size \
-                        --epochs=20 \
+                        --epochs=50 \
                         --num_per_class=12 \
                         --loss=$loss \
                         --metric=$metric \
