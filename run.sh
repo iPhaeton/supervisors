@@ -6,12 +6,12 @@ python jobs.py \
     --num_per_class=2 \
     --loss=triplet_all \
     --metric=eucledian_squared \
-    --margin=0.5 \
-    --lr=1e-3 \
+    --margin=1 \
+    --lr=1e-2 \
     --log_every=1 \
     --save_dir=./checkpoints \
     --save_every=500 \
     --validate_every=100 \
-    --normalized=1 \
+    --normalized=0 \
     --num_classes=2 \
     --batch_size=2

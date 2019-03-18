@@ -2,6 +2,7 @@ import tensorflow as tf
 import tensorflow.contrib.slim as slim
 import importlib.util
 from decorators import partially_applied
+import numpy as np
 
 @partially_applied
 def load_deep_sort_cnn(session, model_path, checkpoint_path):
@@ -41,14 +42,18 @@ def load_deep_sort_cnn(session, model_path, checkpoint_path):
 
     return inputs, outputs, checkpoint_path != None
 
+def custom_initializer(shape_list, dtype, partition_info):
+    return tf.constant(np.random.randn(shape_list[0], shape_list[1]).astype('float32') / shape_list[0])
+
 def load_simplest_model(_):
     X = tf.placeholder(tf.float32, [None, 64, 64, 3])
     X_flat = tf.reshape(X,[-1,12288])
 
+    #W0 = tf.get_variable("W0", shape=[12288, 128], initializer=custom_initializer)
     W0 = tf.get_variable("W0", shape=[12288, 128])
     tf.summary.histogram('W0', W0)
-    a_out = tf.matmul(X_flat,W0)
-    y_out = tf.nn.sigmoid(a_out)
+    a_out = tf.matmul(X_flat,W0, name='a_out')
+    y_out = tf.math.sigmoid(a_out)
     return X, y_out, False
 
 

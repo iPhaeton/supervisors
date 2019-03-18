@@ -8,6 +8,9 @@ from utils.metrics import l2_normalized
 from siamese.losses.utils import mean_distances
 import numpy as np
 
+from global_context import context as ctx
+evaluate = ctx['evaluator'].evaluate
+
 def create_graph(session, base_model, optimizer, loss_fn, is_pretrained, normalized=True):
     """
     Creates graph for a siamese model
@@ -112,6 +115,15 @@ def train_siamese_model(
     
     inputs, outputs, labels, loss, train_step, distance_metrics, num_positive_triplets, something_else = model
     positive_mean_distance, negative_mean_distance, hardest_mean_positive_distance, hardest_mean_negative_distance = distance_metrics
+
+    ctx['evaluator'].initialize_session(tf.global_variables_initializer())
+    # print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+    # print(evaluate(tf.get_default_graph().get_tensor_by_name("W0:0")))
+    # print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+    # print(evaluate(tf.get_default_graph().get_tensor_by_name("a_out:0")))
+    print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+    print(evaluate(outputs))
+    print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
     
     with tf.name_scope('training'):
         training_loss_summary = tf.summary.scalar("loss", loss)
