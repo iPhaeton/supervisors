@@ -3,12 +3,12 @@ python jobs.py \
     --model_name=deep_sort_cnn \
     --model_path=../input/models/deep_sort_cnn/freeze_model.py \
     --source_path=../input/mars/bbox_train/ \
-    --epochs=11 \
+    --epochs=100 \
     --num_per_class=4 \
-    --loss=triplet_hard \
-    --metric=cosine \
-    --margin=0.5 \
-    --lr=1e-5 \
+    --loss=triplet_all \
+    --metric=eucledian_squared \
+    --margin=1 \
+    --lr=1e-2 \
     --log_every=1 \
     --save_dir=./checkpoints \
     --save_every=500 \
