@@ -13,6 +13,6 @@ python jobs.py \
     --save_dir=./checkpoints \
     --save_every=500 \
     --validate_every=100 \
-    --normalized=1 \
+    --normalized=0 \
     --num_classes=10 \
     --batch_size=10
