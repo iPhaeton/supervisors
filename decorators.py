@@ -2,6 +2,7 @@ import tensorflow as tf
 import shutil
 from constants import ON_EPOCH_END, ON_LOG
 import os
+from global_context import context as ctx
 
 def partially_applied(func):
     def outer_wrapper(**kwargs):
@@ -56,4 +57,11 @@ def with_saver(func):
 
         return func(*args, **kwargs)
 
+    return wrapper
+
+def with_evaluator(func):
+    evaluate = ctx['evaluator'].evaluate
+    def wrapper(*args, **kwargs):
+        ctx['evaluator'].initialize_session(tf.global_variables_initializer())
+        return func(*args, **kwargs, evaluate=evaluate)
     return wrapper
