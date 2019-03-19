@@ -16,3 +16,5 @@ python jobs.py \
     --normalized=0 \
     --num_classes=10 \
     --batch_size=10
+
+#--checkpoint_path=../input/models/deep_sort_cnn/mars-small128.ckpt-68577 \
