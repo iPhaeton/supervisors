@@ -6,7 +6,7 @@ python jobs.py \
     --epochs=100 \
     --num_per_class=4 \
     --loss=triplet_all \
-    --metric=eucledian_squared \
+    --metric=cosine \
     --margin=1 \
     --lr=1e-2 \
     --log_every=1 \
