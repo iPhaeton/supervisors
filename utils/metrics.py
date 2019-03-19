@@ -4,8 +4,7 @@ from tensorflow.python.ops import math_ops
 from tensorflow.python.framework import dtypes
 from functools import partial
 from pyramda import compose
-from global_context import context as ctx
-evaluate = ctx['evaluator'].evaluate
+from decorators import with_evaluator
 
 def l2_normalized(embeddings):
     return tf.divide(
@@ -13,7 +12,8 @@ def l2_normalized(embeddings):
         tf.norm(embeddings),
     )
 
-def cosine_distance(embeddings):
+#@with_evaluator
+def cosine_distance(embeddings, evaluate=None):
     """
     Compute cosine distance matrix
     
@@ -38,7 +38,8 @@ def cosine_distance(embeddings):
     )(tf.transpose(embeddings))
 
 #### Original implementation: https://github.com/tensorflow/tensorflow/blob/r1.12/tensorflow/contrib/losses/python/metric_learning/metric_loss_ops.py
-def eucledian_distance(feature, squared=False):
+#@with_evaluator
+def eucledian_distance(feature, squared=False, evaluate=None):
     """Computes the pairwise distance matrix with numerical stability.
     output[i, j] = || feature[i, :] - feature[j, :] ||_2
     Args:
@@ -77,6 +78,7 @@ def eucledian_distance(feature, squared=False):
     mask_offdiagonals = array_ops.ones_like(pairwise_distances) - array_ops.diag(
         array_ops.ones([num_data]))
     pairwise_distances = math_ops.multiply(pairwise_distances, mask_offdiagonals)
+    
     return pairwise_distances
 
 #Original implementation: https://github.com/omoindrot/tensorflow-triplet-loss/blob/master/model/triplet_loss.py
