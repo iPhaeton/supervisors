@@ -54,7 +54,7 @@ def create_graph(session, base_model, optimizer, loss_fn, is_pretrained, normali
         train_step = minimizer.minimize(loss)
     
     if is_pretrained == True:
-        session.run(tf.variables_initializer(optimizer.variables()))
+        session.run(tf.variables_initializer(minimizer.variables()))
     
     return inputs, outputs, labels, learning_rate, loss, train_step, distance_metrics, num_positive_triplets
 
