@@ -188,7 +188,7 @@ def train_siamese_model(
                 break
 
         if (i % 10 == 0) & (i != 0):
-                lr /=2
+            lr /=2
 
         if (observer != None) & (i % log_every == 0):
             print('Calculating training loss...')

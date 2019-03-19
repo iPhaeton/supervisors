@@ -5,8 +5,8 @@ do
         for metric in eucledian_squared;
         do
             for normalized in 0;
-                do
-                for lr in 1e-2;
+            do
+                for lr in 1e-3;
                 do
                     #floyd
                     python jobs.py \
