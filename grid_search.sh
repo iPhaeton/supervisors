@@ -6,7 +6,7 @@ do
         do
             for normalized in 0;
             do
-                for lr in 1e-3;
+                for lr in 1e-2 1e-3 1e-4;
                 do
                     #floyd
                     python jobs.py \
@@ -15,8 +15,8 @@ do
                         --source_path=../input/mars/bbox_train/ \
                         --model_path=../input/models/deep_sort_cnn/freeze_model.py \
                         --batch_size=$batch_size \
-                        --epochs=50 \
-                        --num_per_class=12 \
+                        --epochs=20 \
+                        --num_per_class=$num_per_class \
                         --loss=$loss \
                         --metric=$metric \
                         --margin=1 \
@@ -26,7 +26,7 @@ do
                         --save_every=1000 \
                         --validate_every=1 \
                         --normalized=$normalized \
-                        --log_dir="./logs/log-${batch_size}-${loss}-${metric}-${normalized}-${lr}"
+                        --log_dir="./logs/log-${batch_size}-${num_per_class}-${loss}-${metric}-${normalized}-${lr}"
 
                     #local
                     # python jobs.py \
