@@ -7,15 +7,16 @@ python jobs.py \
     --batch_size=32 \
     --epochs=101 \
     --num_per_class=12 \
-    --loss=triplet_all \
+    --loss=triplet_hard \
     --metric=cosine \
     --margin=1 \
-    --lr=1e-3 \
+    --lr=1e-5 \
     --log_every=1 \
     --save_dir=./checkpoints \
     --save_every=10 \
     --validate_every=1 \
     --normalized=0 \
+    --normalized_input=0 \
     --log_dir="./log"
 
 #--checkpoint_path=../input/models/checkpoint/iteration-90.ckpt \
