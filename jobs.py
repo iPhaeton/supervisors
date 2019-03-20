@@ -65,6 +65,7 @@ def siamese_job(source_path, model_loader, **kwargs):
     lr = kwargs.pop('lr', 1e-3)
     normalized = kwargs.pop('normalized', True)
     num_classes = kwargs.pop('num_classes')
+    normalized_input = kwargs.pop('normalized_input')
     
     tf.reset_default_graph()
 
@@ -94,6 +95,7 @@ def siamese_job(source_path, model_loader, **kwargs):
         dirs=train_dirs[0:3], 
         labels=train_labels[0:3], 
         batch_size=None,
+        normalize=normalized_input,
     )
     ctx['evaluator'].initialize(session=session, feed_dict={
         inputs: eval_samples,
@@ -101,7 +103,7 @@ def siamese_job(source_path, model_loader, **kwargs):
     })
 
     model = create_siamese_graph(session=session, base_model=[inputs, outputs, labels], optimizer=tf.train.AdamOptimizer, loss_fn=loss_fn, is_pretrained=is_pretrained, normalized=normalized)
-
+    
     train_siamese_model(
         session=session,
         model=model,
@@ -117,14 +119,14 @@ def siamese_job(source_path, model_loader, **kwargs):
             image_shape=(128, 64, 3), 
             loader=cv2_loader,
             shuffle=True,
-            normalize=False,
+            normalize=normalized_input,
         ),
         batch_loader = partial(load_batch_of_images,
             path=source_path, 
             num_per_class=num_per_class, 
             image_shape=(128, 64, 3), 
             loader=cv2_loader,
-            normalize=False,
+            normalize=normalized_input,
         ),
         is_pretrained=is_pretrained,
         batch_size=batch_size,
@@ -244,8 +246,14 @@ def parse_args():
     )
     parser.add_argument(
         "--normalized",
-        default=1,
-        help="Whether embeddings should be normalized before calculating loss",
+        default=0,
+        help="Whether embeddings should be normalized before calculating the loss",
+        type=int
+    )
+    parser.add_argument(
+        "--normalized_input",
+        default=0,
+        help="Whether input samples should be normalized",
         type=int
     )
     parser.add_argument(
@@ -298,7 +306,7 @@ def main():
         loss_fn = Triplet_loss_fn(batch_hard_triplet_loss, metric=metric, margin=args.margin)
     elif args.loss == 'triplet_all':
         loss_fn = Triplet_loss_fn(batch_all_triplet_loss, metric=metric, margin=args.margin)
-
+    
     #get data loader
     if args.data == 'cifar10':
         data_loader = load_CIFAR10_data
@@ -332,6 +340,7 @@ def main():
             save_dir=args.save_dir,
             validate_every=args.validate_every,
             normalized=args.normalized == 1,
+            normalized_input=args.normalized_input,
             num_classes=args.num_classes,
         )
 

@@ -15,6 +15,7 @@ python jobs.py \
     --save_every=500 \
     --validate_every=100 \
     --normalized=0 \
+    --normalized_input=0 \
     --num_classes=10 \
     --batch_size=10
 

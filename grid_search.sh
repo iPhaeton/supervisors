@@ -1,12 +1,12 @@
 for batch_size in 32;
 do
-    for loss in triplet_all;
+    for loss in triplet_semihard triplet_hard triplet_all;
     do
         for metric in cosine;
         do
             for normalized in 0;
             do
-                for lr in 1e-3 1e-4 1e-5 1e-6;
+                for lr in 1e-3 1e-5;
                 do
                     #floyd
                     python jobs.py \

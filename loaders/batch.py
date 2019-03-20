@@ -17,7 +17,7 @@ def cv2_loader(path, image_shape):
     img = cv2.resize(img, (image_shape[1], image_shape[0]))
     return np.array(img)
 
-def load_batch_of_images(path, dirs, labels, image_shape, loader, num_per_class, batch_size=None, random=False, indices=None, normalize=True):
+def load_batch_of_images(path, dirs, labels, image_shape, loader, num_per_class, batch_size=None, random=False, indices=None, normalize=0):
     """
     Loads a random batch of images
     
@@ -48,6 +48,8 @@ def load_batch_of_images(path, dirs, labels, image_shape, loader, num_per_class,
         Start index, if batch is not random.
     - end_idx: int
         End index, if batch is not random.
+    - normalize: int
+        If images should be normalized. 0 - do not normalize, 1 - normalize between -1 and 1, 2 - normalize between 0 and 1.
       
     Returns:
     --------
@@ -88,10 +90,12 @@ def load_batch_of_images(path, dirs, labels, image_shape, loader, num_per_class,
             
         samples[i*num_per_class: i*num_per_class + num_per_class, :, :, :] = batch
         batch_labels[i*num_per_class: i*num_per_class + num_per_class] = batch_labels[i*num_per_class: i*num_per_class + num_per_class] * labels[i]
-
-    if normalize == True:
-        samples = (samples - 127.5) / 127.5
     
+    if normalize == 1:
+        samples = (samples - 127.5) / 127.5
+    elif normalize == 2:
+        samples = samples / 255
+    print(normalize, np.max(samples), np.min(samples))
     return samples, batch_labels
 
 def batch_of_images_generator(shuffle=True, **kwargs):
@@ -118,8 +122,8 @@ def batch_of_images_generator(shuffle=True, **kwargs):
         Number of images that should be randomly chosen from each class.
     - batch_size: int
         Number of classes to use in a single batch. Total number of samples will be batch_size * num_per_class
-    - normalize: bool
-        If images should be normalized
+    - normalize: int
+        If images should be normalized. 0 - do not normalize, 1 - normalize between -1 and 1, 2 - normalize between 0 and 1.
       
     Returns:
     --------
@@ -149,7 +153,7 @@ def batch_of_images_generator(shuffle=True, **kwargs):
 
         start_idx = iter_count * batch_size
         end_idx = min(start_idx + batch_size, len(dirs))
-
+        
         samples, batch_labels = load_batch_of_images(**kwargs, random=False, indices=indices[start_idx:end_idx], normalize=normalize)
         
         if end_idx >= len(dirs):
