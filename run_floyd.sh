@@ -7,7 +7,7 @@ python jobs.py \
     --batch_size=32 \
     --epochs=101 \
     --num_per_class=12 \
-    --loss=triplet_hard \
+    --loss=triplet_semihard \
     --metric=cosine \
     --margin=1 \
     --lr=1e-5 \
