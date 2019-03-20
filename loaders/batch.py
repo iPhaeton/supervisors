@@ -95,7 +95,7 @@ def load_batch_of_images(path, dirs, labels, image_shape, loader, num_per_class,
         samples = (samples - 127.5) / 127.5
     elif normalize == 2:
         samples = samples / 255
-    print(normalize, np.max(samples), np.min(samples))
+    
     return samples, batch_labels
 
 def batch_of_images_generator(shuffle=True, **kwargs):
