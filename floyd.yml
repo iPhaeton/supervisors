@@ -3,7 +3,7 @@ mode: job
 env: tensorflow-1.11
 input:
   - destination: models
-    source: dashbouquet/datasets/models/6
+    source: dashbouquet/datasets/models/7
   - destination: mars
     source: dashbouquet/datasets/mars/1
 command: bash ./run_floyd.sh
