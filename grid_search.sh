@@ -1,6 +1,6 @@
-for batch_size in 32;
+for batch_size in 32 64;
 do
-    for loss in triplet_semihard triplet_hard triplet_all;
+    for loss in triplet_hard;
     do
         for metric in cosine;
         do
@@ -8,7 +8,7 @@ do
             do
                 for normalized_input in 0 1 2;
                 do
-                    for lr in 1e-3 1e-5;
+                    for lr in 1e-1 1e-3;
                     do
                         #floyd
                         python jobs.py \
@@ -16,7 +16,6 @@ do
                             --model_name=deep_sort_cnn \
                             --source_path=../input/mars/bbox_train/ \
                             --model_path=../input/models/deep_sort_cnn/freeze_model.py \
-                            --checkpoint_path=../input/models/deep_sort_cnn/mars-small128.ckpt-68577 \
                             --batch_size=$batch_size \
                             --epochs=10 \
                             --num_per_class=12 \
