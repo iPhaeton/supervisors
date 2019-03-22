@@ -1,14 +1,14 @@
-for batch_size in 32 64;
+for batch_size in 64 32;
 do
     for loss in triplet_hard;
     do
-        for metric in cosine;
+        for metric in eucledian_squared;
         do
             for normalized in 0;
             do
-                for normalized_input in 0 1 2;
+                for normalized_input in 2 1 0;
                 do
-                    for lr in 1e-1 1e-3;
+                    for lr in 1e-1 1e-2 1e-3;
                     do
                         #floyd
                         python jobs.py \
@@ -18,7 +18,7 @@ do
                             --model_path=../input/models/deep_sort_cnn/freeze_model.py \
                             --batch_size=$batch_size \
                             --epochs=10 \
-                            --num_per_class=12 \
+                            --num_per_class=4 \
                             --loss=$loss \
                             --metric=$metric \
                             --margin=1 \
